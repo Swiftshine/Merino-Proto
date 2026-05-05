@@ -2,9 +2,10 @@ use crate::merino::reader::{Readable, Reader};
 use anyhow::{Result, anyhow};
 use strum::FromRepr;
 
-#[derive(FromRepr, Debug)]
+#[derive(FromRepr, Debug, Default)]
 #[repr(u32)]
 pub enum MapNodeType {
+    #[default]
     MapSet = 0,
     MapPolySet = 1,
     MapObjSet = 2,
@@ -87,8 +88,10 @@ impl<const N: usize> Readable for Params<N> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum NodeData {
+    #[default]
+    None,
     MapSet {
         unk1: Option<i32>, // >= 4.70
         bounds_start: Vec2f,
@@ -211,6 +214,7 @@ pub enum NodeData {
     },
 }
 
+#[derive(Default)]
 pub struct MapDataNode {
     pub node_type: MapNodeType,
     pub node_data: NodeData,
@@ -243,6 +247,7 @@ impl MapDataNode {
     }
 }
 
+#[derive(Default)]
 pub struct Mapbin {
     pub gimmick_types: Vec<String>,
     pub collectible_types: Vec<String>,
@@ -398,7 +403,6 @@ impl MapDataNode {
                     Ok(outer)
                 })?,
             },
-            _ => todo!(),
         };
 
         let flags = reader.read_u32()?;
