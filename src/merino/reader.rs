@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
 
@@ -12,9 +12,16 @@ pub trait Readable {
 
 // reader
 
+#[derive(Default)]
 pub struct Reader<'a> {
     cursor: Cursor<&'a [u8]>,
     pub version: f32,
+    pub gimmick_types: Vec<String>,
+    pub collectible_types: Vec<String>,
+    pub collision_types: Vec<String>,
+    pub rect_types: Vec<String>,
+    pub enemy_types: Vec<String>,
+    pub unk_types_1: Vec<String>,
 }
 
 impl<'a> Reader<'a> {
@@ -22,6 +29,7 @@ impl<'a> Reader<'a> {
         Self {
             cursor: Cursor::new(bytes),
             version: 0.0,
+            ..Default::default()
         }
     }
 
@@ -117,7 +125,7 @@ impl<'a> Reader<'a> {
         Ok(results)
     }
 
-    pub fn read_level(&mut self) -> Result<Mapbin> {
+    pub fn read_level(mut self) -> Result<Mapbin> {
         // read header
 
         let _filesize = self.read_u64()? as usize; // excluding the header
@@ -126,23 +134,65 @@ impl<'a> Reader<'a> {
 
         // read strings
 
-        let gimmick_types = self.read_array(|reader| reader.read_string(0x20))?;
-        let collectible_types = self.read_array(|reader| reader.read_string(0x20))?;
-        let collision_types = self.read_array(|reader| reader.read_string(0x20))?;
-        let rect_types = self.read_array(|reader| reader.read_string(0x20))?;
-        let enemy_types = self.read_array(|reader| reader.read_string(0x20))?;
-        let unk_types_1 = self.read_array(|reader| reader.read_string(0x20))?;
-        let root = MapDataNode::read(self)?;
+        self.gimmick_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.collectible_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.collision_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.rect_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.enemy_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.unk_types_1 = self.read_array(|reader| reader.read_string(0x20))?;
+        let root = MapDataNode::read(&mut self)?;
 
         Ok(Mapbin {
-            gimmick_types,
-            collectible_types,
-            collision_types,
-            rect_types,
-            enemy_types,
-            unk_types_1,
+            gimmick_types: self.gimmick_types,
+            collectible_types: self.collectible_types,
+            collision_types: self.collision_types,
+            rect_types: self.rect_types,
+            enemy_types: self.enemy_types,
+            unk_types_1: self.unk_types_1,
             root,
         })
+    }
+
+    // accessors
+    fn get_string_by_index(&self, list: &[String], index: usize, label: &str) -> Result<String> {
+        list.get(index).cloned().ok_or_else(|| {
+            anyhow!(
+                "{} index {} out of bounds (len: {})",
+                label,
+                index,
+                list.len()
+            )
+        })
+    }
+
+    pub fn read_gimmick_type(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.gimmick_types, index, "Gimmick")
+    }
+
+    pub fn read_item_type(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.collectible_types, index, "Collectible")
+    }
+
+    pub fn read_collision_type(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.collision_types, index, "Collision")
+    }
+
+    pub fn read_rect_type(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.rect_types, index, "Rect")
+    }
+
+    pub fn read_enemy_type(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.enemy_types, index, "Enemy")
+    }
+
+    pub fn read_unk_type_1(&mut self) -> Result<String> {
+        let index = self.read_u32()? as usize;
+        self.get_string_by_index(&self.unk_types_1, index, "Unk1")
     }
 }
 

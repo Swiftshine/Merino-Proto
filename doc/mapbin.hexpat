@@ -112,7 +112,7 @@ struct MapSetNode {
         }
     }
     else if (mType == MapNodeType::MapItemSet) {
-        s32 m_MIS_unk1;
+        s32 m_MIS_NameIndex;
         Vec2f m_MIS_unk2;
         Vec2f m_MIS_unk3;
         Vec2f m_MIS_unk4;
@@ -279,7 +279,7 @@ struct MapSetNode {
 Header header @ 0;
 gVersion = header.mVersion;
 VarArray<String32> gimmickTypes @ $;
-VarArray<String32> collectibleTypes @ $;
+VarArray<String32> itemTypes @ $;
 VarArray<String32> collisionTypes @ $;
 VarArray<String32> rectTypes @ $;
 VarArray<String32> enemyTypes @ $;

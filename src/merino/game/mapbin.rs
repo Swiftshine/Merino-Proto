@@ -99,12 +99,12 @@ pub enum NodeData {
         start: Vec2f,
         end: Vec2f,
         unk1: Vec2f,
-        collision_type_index: u32,
+        collision_type: String,
         unk3: u32,
     },
 
     MapObjSet {
-        name_index: i32,
+        name: String,
         position: Vec2f,
         unk3: Vec2f,
         unk4: Vec2f,
@@ -122,7 +122,7 @@ pub enum NodeData {
     },
 
     MapItemSet {
-        unk1: i32,
+        name: String,
         unk2: Vec2f,
         unk3: Vec2f,
         unk4: Vec2f,
@@ -191,7 +191,7 @@ pub enum NodeData {
     },
 
     MapTerrain {
-        unk1: i32,
+        collision_type: String,
         unk2: f32,
         unk3: f32,
         unk4: f32,
@@ -270,12 +270,12 @@ impl MapDataNode {
                 start: reader.read_object::<Vec2f>()?,
                 end: reader.read_object::<Vec2f>()?,
                 unk1: reader.read_object::<Vec2f>()?,
-                collision_type_index: reader.read_u32()?,
+                collision_type: reader.read_collision_type()?,
                 unk3: reader.read_u32()?,
             },
 
             MapNodeType::MapObjSet => NodeData::MapObjSet {
-                name_index: reader.read_i32()?,
+                name: reader.read_gimmick_type()?,
                 position: reader.read_object::<Vec2f>()?,
                 unk3: reader.read_object::<Vec2f>()?,
                 unk4: reader.read_object::<Vec2f>()?,
@@ -299,7 +299,7 @@ impl MapDataNode {
             },
 
             MapNodeType::MapItemSet => NodeData::MapItemSet {
-                unk1: reader.read_i32()?,
+                name: reader.read_item_type()?,
                 unk2: reader.read_object::<Vec2f>()?,
                 unk3: reader.read_object::<Vec2f>()?,
                 unk4: reader.read_object::<Vec2f>()?,
@@ -368,7 +368,7 @@ impl MapDataNode {
             },
 
             MapNodeType::MapTerrain => NodeData::MapTerrain {
-                unk1: reader.read_i32()?,
+                collision_type: reader.read_collision_type()?,
                 unk2: reader.read_f32()?,
                 unk3: reader.read_f32()?,
                 unk4: reader.read_f32()?,

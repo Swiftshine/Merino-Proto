@@ -18,15 +18,9 @@ fn main() -> Result<()> {
     let nodes: Vec<&NodeData> = mapbin.root.children().map(|n| &n.node_data).collect();
 
     for node in nodes {
-        if let NodeData::MapPolySet {
-            collision_type_index,
-            unk3,
-            ..
-        } = node
-        {
-            let col_type = &mapbin.collision_types[*collision_type_index as usize];
-
-            println!("{col_type}, {unk3}");
+        if let NodeData::MapTerrain { unk1, .. } = node {
+            let name = &mapbin.collision_types[*unk1 as usize];
+            println!("{name}");
         }
     }
     // let gimmicks: Vec<&NodeData> = mapbin
