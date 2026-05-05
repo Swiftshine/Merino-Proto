@@ -81,8 +81,8 @@ struct MapSetNode {
         u32 m_MPS_unk3; // type index of some sort?
     }
     else if (mType == MapNodeType::MapObjSet) {
-        s32 m_MOS_unk0;
-        Vec2f m_MOS_unk2;
+        s32 m_MOS_NameIndex;
+        Vec2f m_MOS_Position;
         Vec2f m_MOS_unk3;
         Vec2f m_MOS_unk4;
         String32 m_MOS_unk5;
