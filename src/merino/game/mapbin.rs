@@ -139,12 +139,10 @@ pub enum NodeData {
     },
 
     MapEnemySet {
-        unk1: String,
-        unk2: String,
-        unk3: String,
-        unk4: f32,
-        unk5: f32,
-        unk6: f32,
+        name: String,
+        direction: String,
+        orientation: String,
+        position: Vec3f,
         unk7: Option<String>,  // version >= 4.45
         unk8: Option<String>,  // version < 4.43
         unk9: Option<String>,  // version < 4.43
@@ -167,26 +165,26 @@ pub enum NodeData {
     },
 
     MapLocator {
-        unk1: String,
+        name: String,
         position: Vec3f,
         params: Params<3>,
     },
 
     MapPath {
-        unk1: String,
+        name: String,
         points: Vec<Vec2f>,
         params: Params<3>,
     },
 
     MapRect {
-        unk1: String,
+        name: String,
         bounds_start: Vec2f,
         bounds_end: Vec2f,
         params: Params<3>,
     },
 
     MapCircle {
-        unk1: String,
+        name: String,
         position: Vec2f,
         radius: f32,
         params: Params<3>,
@@ -318,12 +316,10 @@ impl MapDataNode {
             },
 
             MapNodeType::MapEnemySet => NodeData::MapEnemySet {
-                unk1: reader.read_string(32)?,
-                unk2: reader.read_string(16)?,
-                unk3: reader.read_string(16)?,
-                unk4: reader.read_f32()?,
-                unk5: reader.read_f32()?,
-                unk6: reader.read_f32()?,
+                name: reader.read_string(32)?,
+                direction: reader.read_string(16)?,
+                orientation: reader.read_string(16)?,
+                position: reader.read_object::<Vec3f>()?,
                 unk7: reader.read_at_version(4.45, |r| r.read_string(32))?,
                 unk8: reader.read_below_version(4.43, |r| r.read_string(16))?,
                 unk9: reader.read_below_version(4.43, |r| r.read_string(16))?,
@@ -346,26 +342,26 @@ impl MapDataNode {
             },
 
             MapNodeType::MapLocator => NodeData::MapLocator {
-                unk1: reader.read_string(64)?,
+                name: reader.read_string(64)?,
                 position: reader.read_object::<Vec3f>()?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapPath => NodeData::MapPath {
-                unk1: reader.read_string(64)?,
+                name: reader.read_string(64)?,
                 points: reader.read_array(|r| r.read_object::<Vec2f>())?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapRect => NodeData::MapRect {
-                unk1: reader.read_string(64)?,
+                name: reader.read_string(64)?,
                 bounds_start: reader.read_object::<Vec2f>()?,
                 bounds_end: reader.read_object::<Vec2f>()?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapCircle => NodeData::MapCircle {
-                unk1: reader.read_string(64)?,
+                name: reader.read_string(64)?,
                 position: reader.read_object::<Vec2f>()?,
                 radius: reader.read_f32()?,
                 params: reader.read_object::<Params<3>>()?,

@@ -105,7 +105,7 @@ struct MapSetNode {
             s32 m_MOS_unk13;
         }
 
-        Params<5> mParams;
+        Params<5> m_MOS_Params;
 
         if (gVersion >= 4.50f) {
             std::Array<std::Array<String32, 2>, 5> m_MOS_unk14;
@@ -136,14 +136,12 @@ struct MapSetNode {
             s32 m_MIS_unk13;
         }
 
-        Params<5> mParams;
+        Params<5> m_MIS_Params;
     } else if (mType == MapNodeType::MapEnemySet) {
-        String32 m_MES_unk1;
-        String16 m_MES_unk2;
-        String16 m_MES_unk3;
-        f32 m_MES_unk4;
-        f32 m_MES_unk5;
-        f32 m_MES_unk6;
+        String32 m_MES_Name;
+        String16 m_MES_Direction;
+        String16 m_MES_Orientation;
+        Vec3f m_MES_Position;
 
         if (gVersion >= 4.45f) {
             String32 m_MES_unk7;
@@ -183,25 +181,25 @@ struct MapSetNode {
             s32 m_MES_unk24;
         }
 
-        Params<5> mParams;
+        Params<5> m_MES_Params;
     } else if (mType == MapNodeType::MapLocator) {
-        String64 m_ML_unk1;
-        Vec3f mPosition;
-        Params<3> mParams;
+        String64 m_ML_Name;
+        Vec3f m_ML_Position;
+        Params<3> m_ML_Params;
     } else if (mType == MapNodeType::MapPath) {
-        String64 m_MP_unk1;
-        VarArray<Vec2f> mPoints;
-        Params<3> mParams;
+        String64 m_MP_Name;
+        VarArray<Vec2f> m_MP_Points;
+        Params<3> m_MP_Params;
     } else if (mType == MapNodeType::MapRect) {
-        String64 m_MR_unk1;
-        Vec2f mBoundsStart;
-        Vec2f mBoundsEnd;
-        Params<3> mParams;
+        String64 m_MR_Name;
+        Vec2f m_MR_BoundsStart;
+        Vec2f m_MR_BoundsEnd;
+        Params<3> m_MR_Params;
     } else if (mType == MapNodeType::MapCircle) {
-        String64 m_MC_unk1;
-        Vec2f mPosition;
-        f32 mRadius;
-        Params<3> mParams;
+        String64 m_MC_Name;
+        Vec2f m_MC_Position;
+        f32 m_MC_Radius;
+        Params<3> m_MC_Params;
     } else if (mType == MapNodeType::MapTerrain) {
         s32 m_MT_unk1;
         f32 m_MT_unk2;
@@ -230,7 +228,7 @@ struct MapSetNode {
 
         VarArray<std::Array<Vec2f, 3>> m_MT_unk15;
 
-        Params<3> mParams;
+        Params<3> m_MT_Params;
 
         if (gVersion >= 4.6f) {
             std::Array<std::Array<String32, 2>, 3> m_MT_unk16;
