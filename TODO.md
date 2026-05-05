@@ -7,3 +7,4 @@
 ## Things to add in the final
 - [ ] GFA file loading
 - [ ] Model loading (hopefully from BFRES)
+- [ ] BSON utility
