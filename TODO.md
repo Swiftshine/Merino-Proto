@@ -2,7 +2,8 @@
 
 ## Things that are critical
 
-- [ ] Level parsing/viewing
+- [x] Level parsing
+- [ ] Level viewing
 - [ ] Level editing
 - [ ] Level saving
 
