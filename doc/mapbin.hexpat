@@ -1,0 +1,289 @@
+#pragma endian big
+#pragma array_limit 4294967296
+#pragma eval_depth 256
+#include <std/array.pat>
+
+import std.sys;
+import std.mem;
+
+using f32 = float;
+
+
+f32 gVersion; // global version
+
+struct Vec2f {
+    f32 x;
+    f32 y;
+};
+
+struct Vec3f {
+    f32 x;
+    f32 y;
+    f32 z;
+};
+struct String64 {
+    char contents[64];
+};
+struct String32 {
+    char contents[32];
+};
+struct String16 {
+    char contents[16];
+};
+
+struct VarArray<T> {
+    u32 mCount;
+    T mObjects[mCount];
+};
+
+struct Header {
+    u64 mFilesize; // excluding the header
+    f32 mVersion; // assumed, based on Epic Yarn documentation
+};
+
+enum MapNodeType : u32 {
+    MapSet = 0,
+    MapPolySet = 1,
+    MapObjSet = 2,
+    MapItemSet = 3,
+    MapEnemySet = 4,
+    MapLocator = 5,
+    MapPath = 6,
+    MapRect = 7,
+    MapCircle = 8,
+    MapTerrain = 9,
+};
+
+struct Params<auto N> {
+    s32 mIntParams[N];
+    f32 mFloatParams[N];
+    String64 mStringParams[N];
+};
+
+// under normal circumstances, i'd name unknown variables based on offset
+// but because that is never guaranteed to be consistent
+// i will instead just mark them by appearance order.
+struct MapSetNode {
+    MapNodeType mType;
+
+    if (mType == MapNodeType::MapSet) {
+        if (gVersion >= 4.70f) {
+            s32 m_MS_unk1;
+        }
+        Vec2f m_MS_BoundsStart;
+        Vec2f m_MS_BoundsEnd;
+    }
+    else if (mType == MapNodeType::MapPolySet) {
+        Vec2f m_MPS_Start;
+        Vec2f m_MPS_End;
+        Vec2f m_MPS_unk1; // maybe a normalized vector?
+        u32 m_MPS_unk2; // type index of some sort?
+        u32 m_MPS_unk3; // type index of some sort?
+    }
+    else if (mType == MapNodeType::MapObjSet) {
+        s32 m_MOS_unk0;
+        Vec2f m_MOS_unk2;
+        Vec2f m_MOS_unk3;
+        Vec2f m_MOS_unk4;
+        String32 m_MOS_unk5;
+
+        if (gVersion >= 4.43f) {
+            s32 m_MOS_unk6;
+        }
+
+        if (gVersion >= 4.44f) {
+            String32 m_MOS_unk7;
+        }
+
+        Vec2f m_MOS_unk8;
+        Vec2f m_MOS_unk9;
+
+        if (gVersion >= 4.71f) {
+            s32 m_MOS_unk10;
+            s32 m_MOS_unk11;
+            s32 m_MOS_unk12;
+            s32 m_MOS_unk13;
+        }
+
+        Params<5> mParams;
+
+        if (gVersion >= 4.50f) {
+            std::Array<std::Array<String32, 2>, 5> m_MOS_unk14;
+        }
+    }
+    else if (mType == MapNodeType::MapItemSet) {
+        s32 m_MIS_unk1;
+        Vec2f m_MIS_unk2;
+        Vec2f m_MIS_unk3;
+        Vec2f m_MIS_unk4;
+        String32 m_MIS_unk5;
+
+        if (gVersion >= 4.43f) {
+            s32 m_MIS_unk6;
+        }
+
+        if (gVersion >= 4.44f) {
+            String32 m_MIS_unk7;
+        }
+
+        Vec2f m_MIS_unk8;
+        Vec2f m_MIS_unk9;
+
+        if (gVersion >= 4.71f) {
+            s32 m_MIS_unk10;
+            s32 m_MIS_unk11;
+            s32 m_MIS_unk12;
+            s32 m_MIS_unk13;
+        }
+
+        Params<5> mParams;
+    } else if (mType == MapNodeType::MapEnemySet) {
+        String32 m_MES_unk1;
+        String16 m_MES_unk2;
+        String16 m_MES_unk3;
+        f32 m_MES_unk4;
+        f32 m_MES_unk5;
+        f32 m_MES_unk6;
+
+        if (gVersion >= 4.45f) {
+            String32 m_MES_unk7;
+        }
+
+        if (gVersion < 4.43f) {
+            String16 m_MES_unk8;
+            String16 m_MES_unk9;
+            String32 m_MES_unk10;
+            s32 m_MES_unk11;
+            s32 m_MES_unk12;
+        }
+
+        s32 m_MES_unk13;
+
+        if (gVersion >= 4.42f) {
+            s32 m_MES_unk14;
+        }
+
+        if (gVersion >= 4.44f) {
+            String32 m_MES_unk15;
+        }
+
+        f32 m_MES_unk16;
+        f32 m_MES_unk17;
+        f32 m_MES_unk18;
+        f32 m_MES_unk19;
+
+        if (gVersion >= 4.71f) {
+            s32 m_MES_unk20;
+            s32 m_MES_unk21;
+            s32 m_MES_unk22;
+            s32 m_MES_unk23;
+        }
+
+        if (gVersion >= 4.72f) {
+            s32 m_MES_unk24;
+        }
+
+        Params<5> mParams;
+    } else if (mType == MapNodeType::MapLocator) {
+        String64 m_ML_unk1;
+        Vec3f mPosition;
+        Params<3> mParams;
+    } else if (mType == MapNodeType::MapPath) {
+        String64 m_MP_unk1;
+        VarArray<Vec2f> mPoints;
+        Params<3> mParams;
+    } else if (mType == MapNodeType::MapRect) {
+        String64 m_MR_unk1;
+        Vec2f mBoundsStart;
+        Vec2f mBoundsEnd;
+        Params<3> mParams;
+    } else if (mType == MapNodeType::MapCircle) {
+        String64 m_MC_unk1;
+        Vec2f mPosition;
+        f32 mRadius;
+        Params<3> mParams;
+    } else if (mType == MapNodeType::MapTerrain) {
+        s32 m_MT_unk1;
+        f32 m_MT_unk2;
+        f32 m_MT_unk3;
+        f32 m_MT_unk4;
+
+        if (gVersion >= 4.43f) {
+            s32 m_MT_unk5;
+        }
+
+        if (gVersion >= 4.44f) {
+            String32 m_MT_unk6;
+        }
+
+        f32 m_MT_unk7;
+        f32 m_MT_unk8;
+        f32 m_MT_unk9;
+        f32 m_MT_unk10;
+
+        if (gVersion >= 4.71f) {
+            s32 m_MT_unk11;
+            s32 m_MT_unk12;
+            s32 m_MT_unk13;
+            s32 m_MT_unk14;
+        }
+
+        VarArray<std::Array<Vec2f, 3>> m_MT_unk15;
+
+        Params<3> mParams;
+
+        if (gVersion >= 4.6f) {
+            std::Array<std::Array<String32, 2>, 3> m_MT_unk16;
+        }
+    }
+
+
+    u32 mFlags;
+
+    if ((mFlags & 1) != 0) {
+        VarArray<MapSetNode> sub1;
+    }
+
+    if ((mFlags & 2) != 0) {
+        VarArray<MapSetNode> sub2;
+    }
+
+    if ((mFlags & 4) != 0) {
+        VarArray<MapSetNode> sub4;
+    }
+
+    if ((mFlags & 8) != 0) {
+        VarArray<MapSetNode> sub8;
+    }
+
+    if ((mFlags & 0x10) != 0) {
+        VarArray<MapSetNode> sub10;
+    }
+
+    if ((mFlags & 0x20) != 0) {
+        VarArray<MapSetNode> sub20;
+    }
+
+    if ((mFlags & 0x40) != 0) {
+        VarArray<MapSetNode> sub40;
+    }
+
+    if ((mFlags & 0x80) != 0) {
+        VarArray<MapSetNode> sub80;
+    }
+
+    if ((mFlags & 0x100) != 0) {
+        VarArray<MapSetNode> sub100;
+    }
+};
+
+
+Header header @ 0;
+gVersion = header.mVersion;
+VarArray<String32> gimmickTypes @ $;
+VarArray<String32> collectibleTypes @ $;
+VarArray<String32> collisionTypes @ $;
+VarArray<String32> rectTypes @ $;
+VarArray<String32> enemyTypes @ $;
+VarArray<String32> unkTypes1 @ $;
+MapSetNode root @ $;
