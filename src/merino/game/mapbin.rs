@@ -104,8 +104,8 @@ pub enum NodeData {
     },
 
     MapObjSet {
-        unk1: i32,
-        unk2: Vec2f,
+        name_index: i32,
+        position: Vec2f,
         unk3: Vec2f,
         unk4: Vec2f,
         unk5: String,
@@ -227,6 +227,24 @@ pub struct MapDataNode {
     pub sub100: Option<Vec<MapDataNode>>,
 }
 
+impl MapDataNode {
+    pub fn children(&self) -> impl Iterator<Item = &MapDataNode> {
+        let subs = [
+            &self.sub1,
+            &self.sub2,
+            &self.sub4,
+            &self.sub8,
+            &self.sub10,
+            &self.sub20,
+            &self.sub40,
+            &self.sub80,
+            &self.sub100,
+        ];
+
+        subs.into_iter().flatten().flatten()
+    }
+}
+
 pub struct Mapbin {
     pub gimmick_types: Vec<String>,
     pub collectible_types: Vec<String>,
@@ -259,8 +277,8 @@ impl MapDataNode {
             },
 
             MapNodeType::MapObjSet => NodeData::MapObjSet {
-                unk1: reader.read_i32()?,
-                unk2: reader.read_object::<Vec2f>()?,
+                name_index: reader.read_i32()?,
+                position: reader.read_object::<Vec2f>()?,
                 unk3: reader.read_object::<Vec2f>()?,
                 unk4: reader.read_object::<Vec2f>()?,
                 unk5: reader.read_string(32)?,
