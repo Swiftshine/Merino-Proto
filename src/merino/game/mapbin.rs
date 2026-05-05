@@ -272,7 +272,7 @@ impl MapDataNode {
                 unk11: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk12: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk13: reader.read_at_version(4.71, |r| r.read_i32())?,
-                params: Params::<5>::read(reader)?,
+                params: reader.read_object::<Params<5>>()?,
                 unk14: reader.read_at_version(4.50, |r| {
                     let mut outer = std::array::from_fn(|_| [String::new(), String::new()]);
                     for i in 0..5 {
@@ -296,7 +296,7 @@ impl MapDataNode {
                 unk11: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk12: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk13: reader.read_at_version(4.71, |r| r.read_i32())?,
-                params: Params::<5>::read(reader)?,
+                params: reader.read_object::<Params<5>>()?,
             },
 
             MapNodeType::MapEnemySet => NodeData::MapEnemySet {
@@ -324,33 +324,33 @@ impl MapDataNode {
                 unk22: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk23: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk24: reader.read_at_version(4.72, |r| r.read_i32())?,
-                params: Params::<5>::read(reader)?,
+                params: reader.read_object::<Params<5>>()?,
             },
 
             MapNodeType::MapLocator => NodeData::MapLocator {
                 unk1: reader.read_string(64)?,
                 position: reader.read_object::<Vec3f>()?,
-                params: Params::<3>::read(reader)?,
+                params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapPath => NodeData::MapPath {
                 unk1: reader.read_string(64)?,
                 points: reader.read_array(|r| r.read_object::<Vec2f>())?,
-                params: Params::<3>::read(reader)?,
+                params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapRect => NodeData::MapRect {
                 unk1: reader.read_string(64)?,
                 bounds_start: reader.read_object::<Vec2f>()?,
                 bounds_end: reader.read_object::<Vec2f>()?,
-                params: Params::<3>::read(reader)?,
+                params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapCircle => NodeData::MapCircle {
                 unk1: reader.read_string(64)?,
                 position: reader.read_object::<Vec2f>()?,
                 radius: reader.read_f32()?,
-                params: Params::<3>::read(reader)?,
+                params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapTerrain => NodeData::MapTerrain {
@@ -375,7 +375,7 @@ impl MapDataNode {
                         r.read_object::<Vec2f>()?,
                     ])
                 })?,
-                params: Params::<3>::read(reader)?,
+                params: reader.read_object::<Params<3>>()?,
                 unk16: reader.read_at_version(4.6, |r| {
                     let mut outer = std::array::from_fn(|_| [String::new(), String::new()]);
                     for i in 0..3 {
