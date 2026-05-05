@@ -18,16 +18,15 @@ fn main() -> Result<()> {
     let nodes: Vec<&NodeData> = mapbin.root.children().map(|n| &n.node_data).collect();
 
     for node in nodes {
-        if let NodeData::MapLocator {
-            name: unk1,
-            position,
-            params,
+        if let NodeData::MapPolySet {
+            collision_type_index,
+            unk3,
+            ..
         } = node
         {
-            println!(
-                "Name: {unk1}, Position: {:#?}, Params: {:#?}",
-                position, params,
-            );
+            let col_type = &mapbin.collision_types[*collision_type_index as usize];
+
+            println!("{col_type}, {unk3}");
         }
     }
     // let gimmicks: Vec<&NodeData> = mapbin

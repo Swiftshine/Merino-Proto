@@ -99,7 +99,7 @@ pub enum NodeData {
         start: Vec2f,
         end: Vec2f,
         unk1: Vec2f,
-        unk2: u32,
+        collision_type_index: u32,
         unk3: u32,
     },
 
@@ -270,7 +270,7 @@ impl MapDataNode {
                 start: reader.read_object::<Vec2f>()?,
                 end: reader.read_object::<Vec2f>()?,
                 unk1: reader.read_object::<Vec2f>()?,
-                unk2: reader.read_u32()?,
+                collision_type_index: reader.read_u32()?,
                 unk3: reader.read_u32()?,
             },
 
