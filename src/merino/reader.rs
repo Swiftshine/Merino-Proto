@@ -16,7 +16,7 @@ pub trait Readable {
 pub struct Reader<'a> {
     cursor: Cursor<&'a [u8]>,
     pub version: f32,
-    pub gimmick_types: Vec<String>,
+    pub object_types: Vec<String>,
     pub collectible_types: Vec<String>,
     pub collision_types: Vec<String>,
     pub rect_types: Vec<String>,
@@ -134,7 +134,7 @@ impl<'a> Reader<'a> {
 
         // read strings
 
-        self.gimmick_types = self.read_array(|reader| reader.read_string(0x20))?;
+        self.object_types = self.read_array(|reader| reader.read_string(0x20))?;
         self.collectible_types = self.read_array(|reader| reader.read_string(0x20))?;
         self.collision_types = self.read_array(|reader| reader.read_string(0x20))?;
         self.rect_types = self.read_array(|reader| reader.read_string(0x20))?;
@@ -143,7 +143,7 @@ impl<'a> Reader<'a> {
         let root = MapDataNode::read(&mut self)?;
 
         Ok(Mapbin {
-            gimmick_types: self.gimmick_types,
+            object_types: self.object_types,
             collectible_types: self.collectible_types,
             collision_types: self.collision_types,
             rect_types: self.rect_types,
@@ -165,9 +165,9 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub fn read_gimmick_type(&mut self) -> Result<String> {
+    pub fn read_object_type(&mut self) -> Result<String> {
         let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.gimmick_types, index, "Gimmick")
+        self.get_string_by_index(&self.object_types, index, "Object")
     }
 
     pub fn read_item_type(&mut self) -> Result<String> {

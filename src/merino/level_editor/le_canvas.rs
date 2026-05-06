@@ -18,6 +18,13 @@ impl LevelEditor {
 
             // process inputs
             self.handle_inputs(ui, &response);
+
+            // edit fields
+            // can only edit the field of 1 selected object at a time
+            if self.state.selected_node_paths.len() == 1 {
+                let path = self.state.selected_node_paths[0].clone();
+                self.edit_node_properties(ui, path);
+            }
         });
     }
 }

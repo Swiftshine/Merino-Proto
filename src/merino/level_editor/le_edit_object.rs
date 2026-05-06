@@ -89,13 +89,7 @@ impl MapDataNode {
             }
 
             MapNodeType::MapObjSet => {
-                if let NodeData::MapObjSet {
-                    name,
-                    position,
-                    params,
-                    ..
-                } = &mut self.node_data
-                {
+                if let NodeData::MapObjSet { name, position, .. } = &mut self.node_data {
                     let screen_pos =
                         canvas_rect.min + state.camera.convert_to_camera(position.into());
 

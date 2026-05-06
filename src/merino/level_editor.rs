@@ -1,10 +1,15 @@
 use std::path::PathBuf;
 
-use crate::merino::{common::camera::CanvasCamera, game::mapbin::Mapbin};
+use crate::merino::{
+    common::camera::CanvasCamera,
+    game::mapbin::{MapDataNode, Mapbin},
+};
 
 mod le_canvas;
+mod le_edit_fields;
+mod le_edit_object;
 mod le_io;
-mod le_object;
+mod le_traits;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum NodeBranch {
@@ -85,25 +90,25 @@ impl LevelEditor {
         }
     }
 
-    // pub fn get_node_at_math(&mut self, path: &NodePath) -> Option<&mut MapDataNode> {
-    //     let mut current = &mut self.mapdata.root;
+    pub fn get_node_at_path(&mut self, path: NodePath) -> Option<&mut MapDataNode> {
+        let mut current = &mut self.mapdata.root;
 
-    //     for (branch, index) in path {
-    //         let vec = match branch {
-    //             NodeBranch::Sub1 => &mut current.sub1,
-    //             NodeBranch::Sub2 => &mut current.sub2,
-    //             NodeBranch::Sub4 => &mut current.sub4,
-    //             NodeBranch::Sub8 => &mut current.sub8,
-    //             NodeBranch::Sub10 => &mut current.sub10,
-    //             NodeBranch::Sub20 => &mut current.sub20,
-    //             NodeBranch::Sub40 => &mut current.sub40,
-    //             NodeBranch::Sub80 => &mut current.sub80,
-    //             NodeBranch::Sub100 => &mut current.sub100,
-    //         };
+        for (branch, index) in path {
+            let vec = match branch {
+                NodeBranch::Sub1 => &mut current.sub1,
+                NodeBranch::Sub2 => &mut current.sub2,
+                NodeBranch::Sub4 => &mut current.sub4,
+                NodeBranch::Sub8 => &mut current.sub8,
+                NodeBranch::Sub10 => &mut current.sub10,
+                NodeBranch::Sub20 => &mut current.sub20,
+                NodeBranch::Sub40 => &mut current.sub40,
+                NodeBranch::Sub80 => &mut current.sub80,
+                NodeBranch::Sub100 => &mut current.sub100,
+            };
 
-    //         current = vec.as_mut()?.get_mut(*index)?;
-    //     }
+            current = vec.as_mut()?.get_mut(index)?;
+        }
 
-    //     Some(current)
-    // }
+        Some(current)
+    }
 }

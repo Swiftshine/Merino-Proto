@@ -278,7 +278,7 @@ struct MapSetNode {
 
 Header header @ 0;
 gVersion = header.mVersion;
-VarArray<String32> gimmickTypes @ $;
+VarArray<String32> objectTypes @ $;
 VarArray<String32> itemTypes @ $;
 VarArray<String32> collisionTypes @ $;
 VarArray<String32> rectTypes @ $;

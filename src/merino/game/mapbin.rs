@@ -3,9 +3,9 @@ use crate::merino::{
     reader::{Readable, Reader},
 };
 use anyhow::{Result, anyhow};
-use strum::FromRepr;
+use strum::{AsRefStr, Display, FromRepr};
 
-#[derive(FromRepr, Debug, Default)]
+#[derive(FromRepr, Debug, Default, Display, AsRefStr)]
 #[repr(u32)]
 pub enum MapNodeType {
     #[default]
@@ -298,7 +298,7 @@ impl MapDataNode {
 
 #[derive(Default)]
 pub struct Mapbin {
-    pub gimmick_types: Vec<String>,
+    pub object_types: Vec<String>,
     pub collectible_types: Vec<String>,
     pub collision_types: Vec<String>,
     pub rect_types: Vec<String>,
@@ -329,7 +329,7 @@ impl MapDataNode {
             },
 
             MapNodeType::MapObjSet => NodeData::MapObjSet {
-                name: reader.read_gimmick_type()?,
+                name: reader.read_object_type()?,
                 position: reader.read_object::<Vec2f>()?,
                 unk3: reader.read_object::<Vec2f>()?,
                 unk4: reader.read_object::<Vec2f>()?,
