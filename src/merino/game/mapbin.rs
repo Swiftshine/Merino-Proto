@@ -1,8 +1,6 @@
-use crate::merino::{
-    level_editor::NodeBranch,
-    reader::{Readable, Reader},
-};
-use anyhow::{Result, anyhow};
+use crate::merino::level_editor::NodeBranch;
+use std::fmt::Display;
+
 use strum::{AsRefStr, Display, FromRepr};
 
 #[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone)]
@@ -21,6 +19,26 @@ pub enum MapNodeType {
     MapTerrain = 9,
 }
 
+// a string with a char limit
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct LimitedString<const N: usize>(pub String);
+
+impl<const N: usize> From<String> for LimitedString<N> {
+    fn from(string: String) -> Self {
+        Self(string)
+    }
+}
+
+impl<const N: usize> Display for LimitedString<N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+pub type String16 = LimitedString<16>;
+pub type String32 = LimitedString<32>;
+pub type String64 = LimitedString<64>;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2f {
     pub x: f32,
@@ -38,7 +56,7 @@ pub struct Vec3f {
 pub struct Params<const N: usize> {
     pub int_values: [i32; N],
     pub float_values: [f32; N],
-    pub string_values: [String; N],
+    pub string_values: [String64; N],
 }
 
 #[derive(Debug, Default)]
@@ -55,18 +73,18 @@ pub enum NodeData {
         start: Vec2f,
         end: Vec2f,
         unk1: Vec2f,
-        collision_type: String,
+        collision_type: String32,
         unk3: u32,
     },
 
     MapObjSet {
-        name: String,
+        name: String32,
         position: Vec3f,
         unk3: f32,
         unk4: Vec2f,
-        unk5: String,
-        unk6: Option<i32>,    // >= 4.43
-        unk7: Option<String>, // >= 4.44
+        unk5: String32,
+        unk6: Option<i32>,      // >= 4.43
+        unk7: Option<String32>, // >= 4.44
         unk8: Vec2f,
         unk9: Vec2f,
         unk10: Option<i32>, // >= 4.71
@@ -74,17 +92,17 @@ pub enum NodeData {
         unk12: Option<i32>, // >= 4.71
         unk13: Option<i32>, // >= 4.71
         params: Params<5>,
-        unk14: Option<[[String; 2]; 5]>, // >= 4.50
+        unk14: Option<[[String32; 2]; 5]>, // >= 4.50
     },
 
     MapItemSet {
-        name: String,
+        name: String32,
         unk2: Vec2f,
         unk3: Vec2f,
         unk4: Vec2f,
-        unk5: String,
-        unk6: Option<i32>,    // version >= 4.43
-        unk7: Option<String>, // version >= 4.44
+        unk5: String32,
+        unk6: Option<i32>,      // version >= 4.43
+        unk7: Option<String32>, // version >= 4.44
         unk8: Vec2f,
         unk9: Vec2f,
         unk10: Option<i32>, // version >= 4.71
@@ -95,19 +113,19 @@ pub enum NodeData {
     },
 
     MapEnemySet {
-        name: String,
-        direction: String,
-        orientation: String,
+        name: String32,
+        direction: String16,
+        orientation: String16,
         position: Vec3f,
-        unk7: Option<String>,  // version >= 4.45
-        unk8: Option<String>,  // version < 4.43
-        unk9: Option<String>,  // version < 4.43
-        unk10: Option<String>, // version < 4.43
-        unk11: Option<i32>,    // version < 4.43
-        unk12: Option<i32>,    // version < 4.43
+        unk7: Option<String32>,  // version >= 4.45
+        unk8: Option<String16>,  // version < 4.43
+        unk9: Option<String16>,  // version < 4.43
+        unk10: Option<String32>, // version < 4.43
+        unk11: Option<i32>,      // version < 4.43
+        unk12: Option<i32>,      // version < 4.43
         unk13: i32,
-        unk14: Option<i32>,    // version >= 4.42
-        unk15: Option<String>, // version >= 4.44
+        unk14: Option<i32>,      // version >= 4.42
+        unk15: Option<String32>, // version >= 4.44
         unk16: f32,
         unk17: f32,
         unk18: f32,
@@ -121,38 +139,38 @@ pub enum NodeData {
     },
 
     MapLocator {
-        name: String,
+        name: String64,
         position: Vec3f,
         params: Params<3>,
     },
 
     MapPath {
-        name: String,
+        name: String64,
         points: Vec<Vec2f>,
         params: Params<3>,
     },
 
     MapRect {
-        name: String,
+        name: String64,
         bounds_start: Vec2f,
         bounds_end: Vec2f,
         params: Params<3>,
     },
 
     MapCircle {
-        name: String,
+        name: String64,
         position: Vec2f,
         radius: f32,
         params: Params<3>,
     },
 
     MapTerrain {
-        collision_type: String,
+        collision_type: String32,
         unk2: f32,
         unk3: f32,
         unk4: f32,
-        unk5: Option<i32>,    // version >= 4.43
-        unk6: Option<String>, // version >= 4.44
+        unk5: Option<i32>,      // version >= 4.43
+        unk6: Option<String32>, // version >= 4.44
         unk7: f32,
         unk8: f32,
         unk9: f32,
@@ -163,7 +181,7 @@ pub enum NodeData {
         unk14: Option<i32>, // version >= 4.71
         unk15: Vec<[Vec2f; 3]>,
         params: Params<3>,
-        unk16: Option<[[String; 2]; 3]>, // version >= 4.6
+        unk16: Option<[[String32; 2]; 3]>, // version >= 4.6
     },
 }
 
@@ -249,12 +267,12 @@ impl MapDataNode {
 #[derive(Default)]
 pub struct Mapbin {
     pub version: f32,
-    pub object_types: Vec<String>,
-    pub item_types: Vec<String>,
-    pub collision_types: Vec<String>,
-    pub rect_types: Vec<String>,
-    pub enemy_types: Vec<String>,
-    pub unk_types_1: Vec<String>,
+    pub object_types: Vec<String32>,
+    pub item_types: Vec<String32>,
+    pub collision_types: Vec<String32>,
+    pub rect_types: Vec<String32>,
+    pub enemy_types: Vec<String32>,
+    pub unk_types_1: Vec<String32>,
     pub root: MapDataNode,
 }
 
@@ -272,10 +290,10 @@ impl Mapbin {
 impl MapDataNode {
     fn collect_strings(
         &self,
-        object_types: &mut Vec<String>,
-        item_types: &mut Vec<String>,
-        collision_types: &mut Vec<String>,
-        enemy_types: &mut Vec<String>,
+        object_types: &mut Vec<String32>,
+        item_types: &mut Vec<String32>,
+        collision_types: &mut Vec<String32>,
+        enemy_types: &mut Vec<String32>,
     ) {
         match &self.node_data {
             NodeData::MapPolySet { collision_type, .. } => {

@@ -5,6 +5,8 @@ use crate::merino::{
 };
 use anyhow::{Result, anyhow};
 
+/* READING */
+
 impl Readable for Vec2f {
     fn read(reader: &mut Reader) -> Result<Self>
     where
@@ -30,6 +32,12 @@ impl Readable for Vec3f {
     }
 }
 
+impl<const N: usize> Readable for LimitedString<N> {
+    fn read(reader: &mut Reader) -> Result<Self> {
+        Ok(Self(reader.read_string(N)?))
+    }
+}
+
 impl<const N: usize> Readable for Params<N> {
     fn read(reader: &mut Reader) -> Result<Self> {
         let mut int_values = [0i32; N];
@@ -42,9 +50,10 @@ impl<const N: usize> Readable for Params<N> {
             float_values[i] = reader.read_f32()?;
         }
 
-        let mut string_values = std::array::from_fn(|_| String::new());
+        let mut string_values: [LimitedString<64>; N] = std::array::from_fn(|_| Default::default());
+
         for i in 0..N {
-            string_values[i] = reader.read_string(64)?;
+            string_values[i] = LimitedString::<64>::read(reader)?
         }
 
         Ok(Self {
@@ -81,9 +90,11 @@ impl MapDataNode {
                 position: reader.read_object::<Vec3f>()?,
                 unk3: reader.read_f32()?,
                 unk4: reader.read_object::<Vec2f>()?,
-                unk5: reader.read_string(32)?,
+                unk5: reader.read_object::<String32>()?,
                 unk6: reader.read_at_version(4.43, |r| r.read_i32())?,
-                unk7: reader.read_at_version(4.44, |r| r.read_string(32))?,
+                unk7: reader
+                    .read_at_version(4.44, |r| r.read_object::<String32>())?
+                    .map(Into::into),
                 unk8: reader.read_object::<Vec2f>()?,
                 unk9: reader.read_object::<Vec2f>()?,
                 unk10: reader.read_at_version(4.71, |r| r.read_i32())?,
@@ -92,9 +103,13 @@ impl MapDataNode {
                 unk13: reader.read_at_version(4.71, |r| r.read_i32())?,
                 params: reader.read_object::<Params<5>>()?,
                 unk14: reader.read_at_version(4.50, |r| {
-                    let mut outer = std::array::from_fn(|_| [String::new(), String::new()]);
+                    let mut outer =
+                        std::array::from_fn(|_| [Default::default(), Default::default()]);
                     for i in 0..5 {
-                        outer[i] = [r.read_string(32)?, r.read_string(32)?];
+                        outer[i] = [
+                            r.read_object::<LimitedString<32>>()?,
+                            r.read_object::<LimitedString<32>>()?,
+                        ];
                     }
                     Ok(outer)
                 })?,
@@ -105,9 +120,9 @@ impl MapDataNode {
                 unk2: reader.read_object::<Vec2f>()?,
                 unk3: reader.read_object::<Vec2f>()?,
                 unk4: reader.read_object::<Vec2f>()?,
-                unk5: reader.read_string(32)?,
+                unk5: reader.read_object::<String32>()?,
                 unk6: reader.read_at_version(4.43, |r| r.read_i32())?,
-                unk7: reader.read_at_version(4.44, |r| r.read_string(32))?,
+                unk7: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
                 unk8: reader.read_object::<Vec2f>()?,
                 unk9: reader.read_object::<Vec2f>()?,
                 unk10: reader.read_at_version(4.71, |r| r.read_i32())?,
@@ -118,19 +133,25 @@ impl MapDataNode {
             },
 
             MapNodeType::MapEnemySet => NodeData::MapEnemySet {
-                name: reader.read_string(32)?,
-                direction: reader.read_string(16)?,
-                orientation: reader.read_string(16)?,
+                name: reader.read_object::<String32>()?,
+                direction: reader.read_object::<String16>()?,
+                orientation: reader.read_object::<String16>()?,
                 position: reader.read_object::<Vec3f>()?,
-                unk7: reader.read_at_version(4.45, |r| r.read_string(32))?,
-                unk8: reader.read_below_version(4.43, |r| r.read_string(16))?,
-                unk9: reader.read_below_version(4.43, |r| r.read_string(16))?,
-                unk10: reader.read_below_version(4.43, |r| r.read_string(32))?,
+                unk7: reader.read_at_version(4.45, |r| r.read_object::<String32>())?,
+                unk8: reader
+                    .read_below_version(4.43, |r| r.read_string(16))?
+                    .map(Into::into),
+                unk9: reader
+                    .read_below_version(4.43, |r| r.read_string(16))?
+                    .map(Into::into),
+                unk10: reader
+                    .read_below_version(4.43, |r| r.read_object::<String32>())?
+                    .map(Into::into),
                 unk11: reader.read_below_version(4.43, |r| r.read_i32())?,
                 unk12: reader.read_below_version(4.43, |r| r.read_i32())?,
                 unk13: reader.read_i32()?,
                 unk14: reader.read_at_version(4.42, |r| r.read_i32())?,
-                unk15: reader.read_at_version(4.44, |r| r.read_string(32))?,
+                unk15: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
                 unk16: reader.read_f32()?,
                 unk17: reader.read_f32()?,
                 unk18: reader.read_f32()?,
@@ -144,26 +165,26 @@ impl MapDataNode {
             },
 
             MapNodeType::MapLocator => NodeData::MapLocator {
-                name: reader.read_string(64)?,
+                name: reader.read_object::<String64>()?,
                 position: reader.read_object::<Vec3f>()?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapPath => NodeData::MapPath {
-                name: reader.read_string(64)?,
+                name: reader.read_object::<String64>()?,
                 points: reader.read_array(|r| r.read_object::<Vec2f>())?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapRect => NodeData::MapRect {
-                name: reader.read_string(64)?,
+                name: reader.read_object::<String64>()?,
                 bounds_start: reader.read_object::<Vec2f>()?,
                 bounds_end: reader.read_object::<Vec2f>()?,
                 params: reader.read_object::<Params<3>>()?,
             },
 
             MapNodeType::MapCircle => NodeData::MapCircle {
-                name: reader.read_string(64)?,
+                name: reader.read_object::<String64>()?,
                 position: reader.read_object::<Vec2f>()?,
                 radius: reader.read_f32()?,
                 params: reader.read_object::<Params<3>>()?,
@@ -175,7 +196,7 @@ impl MapDataNode {
                 unk3: reader.read_f32()?,
                 unk4: reader.read_f32()?,
                 unk5: reader.read_at_version(4.43, |r| r.read_i32())?,
-                unk6: reader.read_at_version(4.44, |r| r.read_string(32))?,
+                unk6: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
                 unk7: reader.read_f32()?,
                 unk8: reader.read_f32()?,
                 unk9: reader.read_f32()?,
@@ -193,9 +214,9 @@ impl MapDataNode {
                 })?,
                 params: reader.read_object::<Params<3>>()?,
                 unk16: reader.read_at_version(4.6, |r| {
-                    let mut outer = std::array::from_fn(|_| [String::new(), String::new()]);
+                    let mut outer = std::array::from_fn(|_| Default::default());
                     for i in 0..3 {
-                        outer[i] = [r.read_string(32)?, r.read_string(32)?];
+                        outer[i] = [r.read_object::<String32>()?, r.read_object::<String32>()?];
                     }
                     Ok(outer)
                 })?,
@@ -230,6 +251,8 @@ impl MapDataNode {
     }
 }
 
+/* WRITING */
+
 impl Writable for Vec2f {
     fn write(&self, writer: &mut Writer, _: f32) -> Result<()> {
         writer.write_f32(self.x)?;
@@ -247,8 +270,14 @@ impl Writable for Vec3f {
     }
 }
 
-impl<const N: usize> Writable for Params<N> {
+impl<const N: usize> Writable for LimitedString<N> {
     fn write(&self, writer: &mut Writer, _: f32) -> Result<()> {
+        writer.write_string(&self.0, N)
+    }
+}
+
+impl<const N: usize> Writable for Params<N> {
+    fn write(&self, writer: &mut Writer, version: f32) -> Result<()> {
         for v in self.int_values {
             writer.write_i32(v)?;
         }
@@ -256,7 +285,7 @@ impl<const N: usize> Writable for Params<N> {
             writer.write_f32(v)?;
         }
         for v in &self.string_values {
-            writer.write_string(v, 64)?;
+            v.write(writer, version)?;
         }
         Ok(())
     }

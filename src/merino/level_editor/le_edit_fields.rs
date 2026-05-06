@@ -51,19 +51,19 @@ impl LevelEditor {
             unk14,
         } = node_data
         {
-            name.edit_properties(ui, EditInfo::string("Name", 32));
-            position.edit_properties(ui, EditInfo::value("Position"));
-            unk3.edit_properties(ui, EditInfo::value("Unk 3"));
-            unk4.edit_properties(ui, EditInfo::value("Unk 4"));
-            unk5.edit_properties(ui, EditInfo::string("Unk 5", 32));
-            unk6.edit_properties(ui, EditInfo::value("Unk 6"));
-            unk7.edit_properties(ui, EditInfo::string("Unk 7", 32));
-            unk8.edit_properties(ui, EditInfo::value("Unk 8"));
-            unk9.edit_properties(ui, EditInfo::value("Unk 9"));
-            unk10.edit_properties(ui, EditInfo::value("Unk 10"));
-            unk11.edit_properties(ui, EditInfo::value("Unk 11"));
-            unk12.edit_properties(ui, EditInfo::value("Unk 12"));
-            unk13.edit_properties(ui, EditInfo::value("Unk 13"));
+            name.edit_properties(ui, EditInfo::label("Name"));
+            position.edit_properties(ui, EditInfo::label("Position"));
+            unk3.edit_properties(ui, EditInfo::label("Unk 3"));
+            unk4.edit_properties(ui, EditInfo::label("Unk 4"));
+            unk5.edit_properties(ui, EditInfo::label("Unk 5"));
+            unk6.edit_properties(ui, EditInfo::label("Unk 6"));
+            unk7.edit_properties(ui, EditInfo::label("Unk 7"));
+            unk8.edit_properties(ui, EditInfo::label("Unk 8"));
+            unk9.edit_properties(ui, EditInfo::label("Unk 9"));
+            unk10.edit_properties(ui, EditInfo::label("Unk 10"));
+            unk11.edit_properties(ui, EditInfo::label("Unk 11"));
+            unk12.edit_properties(ui, EditInfo::label("Unk 12"));
+            unk13.edit_properties(ui, EditInfo::label("Unk 13"));
             params.edit_properties(ui, None);
         }
     }

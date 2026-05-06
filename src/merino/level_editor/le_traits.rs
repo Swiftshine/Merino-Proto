@@ -1,4 +1,4 @@
-use crate::merino::game::mapbin::{Params, Vec2f, Vec3f};
+use crate::merino::game::mapbin::{LimitedString, Params, Vec2f, Vec3f};
 
 /// A trait to simplify property parsing.
 pub trait Editable {
@@ -6,22 +6,12 @@ pub trait Editable {
 }
 
 pub enum EditInfo<'a> {
-    Value { label: &'a str },
-    String { label: &'a str, limit: usize },
-    StringLimit(usize),
+    Label(&'a str),
 }
 
 impl<'a> EditInfo<'a> {
-    pub fn string_limit(limit: usize) -> Option<Self> {
-        Some(Self::StringLimit(limit))
-    }
-
-    pub fn value(label: &'a str) -> Option<Self> {
-        Some(Self::Value { label })
-    }
-
-    pub fn string(label: &'a str, limit: usize) -> Option<Self> {
-        Some(Self::String { label, limit })
+    pub fn label(label: &'a str) -> Option<Self> {
+        Some(Self::Label(label))
     }
 }
 
@@ -49,7 +39,7 @@ macro_rules! impl_editable_numeric {
                             .range(<$t>::MIN..=<$t>::MAX));
                     };
 
-                    if let Some(EditInfo::Value { label }) = info {
+                    if let Some(EditInfo::Label(label)) = info {
                         // this is its own attribute
                         ui.collapsing(label, |ui| ui.horizontal(render));
                     } else {
@@ -68,7 +58,7 @@ macro_rules! impl_editable_vec {
     ($t:ty, [$($field:ident),*]) => {
         impl Editable for $t {
             fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-                if let Some(EditInfo::Value { label }) = info {
+                if let Some(EditInfo::Label(label)) = info {
                     ui.collapsing(label, |ui| {
                         ui.horizontal(|ui| {
                             $(
@@ -88,14 +78,14 @@ macro_rules! impl_editable_vec {
 impl_editable_vec!(Vec2f, [x, y]);
 impl_editable_vec!(Vec3f, [x, y, z]);
 
-impl Editable for String {
+impl<const N: usize> Editable for LimitedString<N> {
     fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::String { label, limit }) = info {
+        if let Some(EditInfo::Label(label)) = info {
             ui.collapsing(label, |ui| {
-                ui.add(egui::TextEdit::singleline(self).char_limit(limit));
+                ui.add(egui::TextEdit::singleline(&mut self.0).char_limit(N));
             });
-        } else if let Some(EditInfo::StringLimit(limit)) = info {
-            ui.add(egui::TextEdit::singleline(self).char_limit(limit));
+        } else {
+            ui.add(egui::TextEdit::singleline(&mut self.0).char_limit(N));
         }
     }
 }
@@ -132,7 +122,7 @@ impl<const N: usize> Editable for Params<N> {
 
             ui.collapsing("String Params", |ui| {
                 for val in self.string_values.iter_mut() {
-                    val.edit_properties(ui, EditInfo::string_limit(64));
+                    val.edit_properties(ui, None);
                 }
             });
         });

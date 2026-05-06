@@ -1,9 +1,4 @@
-use crate::merino::game::mapbin::MapDataNode;
-use crate::merino::game::mapbin::Mapbin;
-use crate::merino::game::mapbin::NodeData;
-use crate::merino::game::mapbin::Params;
-use crate::merino::game::mapbin::Vec2f;
-use crate::merino::game::mapbin::Vec3f;
+use crate::merino::game::mapbin::*;
 use anyhow::Result;
 use anyhow::anyhow;
 use byteorder::{BigEndian, WriteBytesExt};
@@ -56,7 +51,7 @@ impl Writer {
     }
 
     // util
-    fn get_index_of(&self, list: &[String], value: &str, label: &str) -> Result<u32> {
+    fn get_index_of(&self, list: &[String32], value: &String32, label: &str) -> Result<u32> {
         list.iter()
             .position(|s| s == value)
             .map(|i| i as u32)
@@ -158,9 +153,9 @@ impl Writer {
                 position.write(self, version)?;
                 self.write_f32(*unk3)?;
                 unk4.write(self, version)?;
-                self.write_string(unk5, 32)?;
+                unk5.write(self, version)?;
                 self.write_at_version(version, 4.43, unk6, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.44, unk7, |w, v| w.write_string(v, 32))?;
+                self.write_at_version(version, 4.44, unk7, |w, v| v.write(w, version))?;
                 unk8.write(self, version)?;
                 unk9.write(self, version)?;
                 self.write_at_version(version, 4.71, unk10, |w, v| w.write_i32(*v))?;
@@ -170,8 +165,8 @@ impl Writer {
                 params.write(self, version)?;
                 self.write_at_version(version, 4.50, unk14, |w, v| {
                     for pair in v {
-                        w.write_string(&pair[0], 32)?;
-                        w.write_string(&pair[1], 32)?;
+                        pair[0].write(w, version)?;
+                        pair[1].write(w, version)?;
                     }
                     Ok(())
                 })?;
@@ -198,9 +193,9 @@ impl Writer {
                 unk2.write(self, version)?;
                 unk3.write(self, version)?;
                 unk4.write(self, version)?;
-                self.write_string(unk5, 32)?;
+                unk5.write(self, version)?;
                 self.write_at_version(version, 4.43, unk6, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.44, unk7, |w, v| w.write_string(v, 32))?;
+                self.write_at_version(version, 4.44, unk7, |w, v| v.write(w, version))?;
                 unk8.write(self, version)?;
                 unk9.write(self, version)?;
                 self.write_at_version(version, 4.71, unk10, |w, v| w.write_i32(*v))?;
@@ -235,19 +230,19 @@ impl Writer {
                 unk24,
                 params,
             } => {
-                self.write_string(name, 32)?;
-                self.write_string(direction, 16)?;
-                self.write_string(orientation, 16)?;
+                name.write(self, version)?;
+                direction.write(self, version)?;
+                orientation.write(self, version)?;
                 position.write(self, version)?;
-                self.write_at_version(version, 4.45, unk7, |w, v| w.write_string(v, 32))?;
-                self.write_below_version(version, 4.43, unk8, |w, v| w.write_string(v, 16))?;
-                self.write_below_version(version, 4.43, unk9, |w, v| w.write_string(v, 16))?;
-                self.write_below_version(version, 4.43, unk10, |w, v| w.write_string(v, 32))?;
+                self.write_at_version(version, 4.45, unk7, |w, v| v.write(w, version))?;
+                self.write_below_version(version, 4.43, unk8, |w, v| v.write(w, version))?;
+                self.write_below_version(version, 4.43, unk9, |w, v| v.write(w, version))?;
+                self.write_below_version(version, 4.43, unk10, |w, v| v.write(w, version))?;
                 self.write_below_version(version, 4.43, unk11, |w, v| w.write_i32(*v))?;
                 self.write_below_version(version, 4.43, unk12, |w, v| w.write_i32(*v))?;
                 self.write_i32(*unk13)?;
                 self.write_at_version(version, 4.42, unk14, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.44, unk15, |w, v| w.write_string(v, 32))?;
+                self.write_at_version(version, 4.44, unk15, |w, v| v.write(w, version))?;
                 self.write_f32(*unk16)?;
                 self.write_f32(*unk17)?;
                 self.write_f32(*unk18)?;
@@ -264,7 +259,7 @@ impl Writer {
                 position,
                 params,
             } => {
-                self.write_string(name, 64)?;
+                name.write(self, version)?;
                 position.write(self, version)?;
                 params.write(self, version)?;
             }
@@ -274,7 +269,7 @@ impl Writer {
                 points,
                 params,
             } => {
-                self.write_string(name, 64)?;
+                name.write(self, version)?;
                 self.write_u32(points.len() as u32)?;
                 for p in points {
                     p.write(self, version)?;
@@ -288,7 +283,7 @@ impl Writer {
                 bounds_end,
                 params,
             } => {
-                self.write_string(name, 64)?;
+                name.write(self, version)?;
                 bounds_start.write(self, version)?;
                 bounds_end.write(self, version)?;
                 params.write(self, version)?;
@@ -300,7 +295,7 @@ impl Writer {
                 radius,
                 params,
             } => {
-                self.write_string(name, 64)?;
+                name.write(self, version)?;
                 position.write(self, version)?;
                 self.write_f32(*radius)?;
                 params.write(self, version)?;
@@ -332,7 +327,7 @@ impl Writer {
                 self.write_f32(*unk3)?;
                 self.write_f32(*unk4)?;
                 self.write_at_version(version, 4.43, unk5, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.44, unk6, |w, v| w.write_string(v, 32))?;
+                self.write_at_version(version, 4.44, unk6, |w, v| v.write(w, version))?;
                 self.write_f32(*unk7)?;
                 self.write_f32(*unk8)?;
                 self.write_f32(*unk9)?;
@@ -350,8 +345,8 @@ impl Writer {
                 params.write(self, version)?;
                 self.write_at_version(version, 4.6, unk16, |w, v| {
                     for pair in v {
-                        w.write_string(&pair[0], 32)?;
-                        w.write_string(&pair[1], 32)?;
+                        pair[0].write(w, version)?;
+                        pair[1].write(w, version)?;
                     }
                     Ok(())
                 })?;
@@ -402,12 +397,12 @@ impl Writer {
 
         // strings
 
-        let mut write_string32_array = |array: &Vec<String>| -> Result<()> {
+        let mut write_string32_array = |array: &Vec<String32>| -> Result<()> {
             let count = array.len();
             self.write_u32(count as u32)?;
 
             for string in array.iter() {
-                self.write_string(string, 32)?;
+                string.write(&mut self, mapbin.version)?;
             }
 
             Ok(())

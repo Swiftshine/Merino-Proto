@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
 
-use crate::merino::game::mapbin::{MapDataNode, Mapbin};
+use crate::merino::game::mapbin::{MapDataNode, Mapbin, String32};
 
 pub trait Readable {
     fn read(reader: &mut Reader) -> Result<Self>
@@ -16,12 +16,12 @@ pub trait Readable {
 pub struct Reader<'a> {
     cursor: Cursor<&'a [u8]>,
     pub version: f32,
-    pub object_types: Vec<String>,
-    pub collectible_types: Vec<String>,
-    pub collision_types: Vec<String>,
-    pub rect_types: Vec<String>,
-    pub enemy_types: Vec<String>,
-    pub unk_types_1: Vec<String>,
+    pub object_types: Vec<String32>,
+    pub collectible_types: Vec<String32>,
+    pub collision_types: Vec<String32>,
+    pub rect_types: Vec<String32>,
+    pub enemy_types: Vec<String32>,
+    pub unk_types_1: Vec<String32>,
 }
 
 impl<'a> Reader<'a> {
@@ -134,12 +134,12 @@ impl<'a> Reader<'a> {
 
         // read strings
 
-        self.object_types = self.read_array(|reader| reader.read_string(0x20))?;
-        self.collectible_types = self.read_array(|reader| reader.read_string(0x20))?;
-        self.collision_types = self.read_array(|reader| reader.read_string(0x20))?;
-        self.rect_types = self.read_array(|reader| reader.read_string(0x20))?;
-        self.enemy_types = self.read_array(|reader| reader.read_string(0x20))?;
-        self.unk_types_1 = self.read_array(|reader| reader.read_string(0x20))?;
+        self.object_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.collectible_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.collision_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.rect_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.enemy_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.unk_types_1 = self.read_array(|reader| reader.read_object::<String32>())?;
         let root = MapDataNode::read(&mut self)?;
 
         Ok(Mapbin {
@@ -155,7 +155,12 @@ impl<'a> Reader<'a> {
     }
 
     // accessors
-    fn get_string_by_index(&self, list: &[String], index: usize, label: &str) -> Result<String> {
+    fn get_string_by_index(
+        &self,
+        list: &[String32],
+        index: usize,
+        label: &str,
+    ) -> Result<String32> {
         list.get(index).cloned().ok_or_else(|| {
             anyhow!(
                 "{} index {} out of bounds (len: {})",
@@ -166,17 +171,17 @@ impl<'a> Reader<'a> {
         })
     }
 
-    pub fn read_object_type(&mut self) -> Result<String> {
+    pub fn read_object_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
         self.get_string_by_index(&self.object_types, index, "Object")
     }
 
-    pub fn read_item_type(&mut self) -> Result<String> {
+    pub fn read_item_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
         self.get_string_by_index(&self.collectible_types, index, "Collectible")
     }
 
-    pub fn read_collision_type(&mut self) -> Result<String> {
+    pub fn read_collision_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
         self.get_string_by_index(&self.collision_types, index, "Collision")
     }
