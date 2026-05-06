@@ -1,11 +1,11 @@
 use std::fs;
 
-use crate::merino::{level_editor::LevelEditor, reader::read_level};
+use crate::merino::{level_editor::LevelEditor, reader::read_level, writer::write_level};
 use anyhow::Result;
 use rfd::FileDialog;
 
 impl LevelEditor {
-    pub fn open_file(&mut self, _ctx: &egui::Context) -> Result<()> {
+    pub fn open_file(&mut self) -> Result<()> {
         // ask user to open file
         // for now we're opening the mapbin directly
         if let Some(path) = FileDialog::new()
@@ -21,6 +21,17 @@ impl LevelEditor {
             self.file_open = true;
         }
 
+        Ok(())
+    }
+
+    pub fn save_file(&mut self) -> Result<()> {
+        if let Some(path) = FileDialog::new()
+            .add_filter("Level File", &["mapbin"])
+            .save_file()
+        {
+            let data = write_level(&self.mapdata)?;
+            fs::write(path, data)?;
+        }
         Ok(())
     }
 }

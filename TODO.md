@@ -5,7 +5,7 @@
 - [x] Level parsing
 - [ ] Level viewing
 - [ ] Level editing
-- [ ] Level saving
+- [x] Level saving
 
 ## Things to add in the final
 

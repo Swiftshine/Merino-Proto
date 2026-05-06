@@ -5,7 +5,7 @@ use crate::merino::{
 use anyhow::{Result, anyhow};
 use strum::{AsRefStr, Display, FromRepr};
 
-#[derive(FromRepr, Debug, Default, Display, AsRefStr)]
+#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone)]
 #[repr(u32)]
 pub enum MapNodeType {
     #[default]
@@ -298,8 +298,9 @@ impl MapDataNode {
 
 #[derive(Default)]
 pub struct Mapbin {
+    pub version: f32,
     pub object_types: Vec<String>,
-    pub collectible_types: Vec<String>,
+    pub item_types: Vec<String>,
     pub collision_types: Vec<String>,
     pub rect_types: Vec<String>,
     pub enemy_types: Vec<String>,

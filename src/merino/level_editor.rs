@@ -64,7 +64,17 @@ impl LevelEditor {
             egui::MenuBar::new().ui(ui, |ui| {
                 // file submenu
                 if ui.button("Open").clicked() {
-                    let _ = self.open_file(ui.ctx());
+                    let _ = self.open_file();
+                }
+
+                if ui
+                    .add_enabled(
+                        self.file_open && self.file_path.is_some(),
+                        egui::Button::new("Save As"),
+                    )
+                    .clicked()
+                {
+                    let _ = self.save_file();
                 }
             });
         });

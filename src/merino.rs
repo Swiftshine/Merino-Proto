@@ -3,6 +3,7 @@ mod game;
 mod level_editor;
 mod reader;
 mod views;
+mod writer;
 
 use anyhow::Result;
 use eframe::{NativeOptions, egui};

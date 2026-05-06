@@ -143,8 +143,9 @@ impl<'a> Reader<'a> {
         let root = MapDataNode::read(&mut self)?;
 
         Ok(Mapbin {
+            version,
             object_types: self.object_types,
-            collectible_types: self.collectible_types,
+            item_types: self.collectible_types,
             collision_types: self.collision_types,
             rect_types: self.rect_types,
             enemy_types: self.enemy_types,
