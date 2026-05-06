@@ -29,9 +29,18 @@ impl LevelEditor {
             .add_filter("Level File", &["mapbin"])
             .save_file()
         {
+            // collect any brand new strings
+            self.collect_new_strings();
+            // then write the data
             let data = write_level(&self.mapdata)?;
             fs::write(path, data)?;
         }
         Ok(())
+    }
+
+    fn collect_new_strings(&mut self) {
+        // go through every item, check if the string already exists,
+        // and add it to the appropriate vec if not
+        self.mapdata.collect_new_strings();
     }
 }

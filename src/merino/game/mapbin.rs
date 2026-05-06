@@ -308,7 +308,60 @@ pub struct Mapbin {
     pub root: MapDataNode,
 }
 
+impl Mapbin {
+    pub fn collect_new_strings(&mut self) {
+        self.root.collect_strings(
+            &mut self.object_types,
+            &mut self.item_types,
+            &mut self.collision_types,
+            &mut self.enemy_types,
+        );
+    }
+}
+
 impl MapDataNode {
+    fn collect_strings(
+        &self,
+        object_types: &mut Vec<String>,
+        item_types: &mut Vec<String>,
+        collision_types: &mut Vec<String>,
+        enemy_types: &mut Vec<String>,
+    ) {
+        match &self.node_data {
+            NodeData::MapPolySet { collision_type, .. } => {
+                if !collision_types.contains(collision_type) {
+                    collision_types.push(collision_type.clone());
+                }
+            }
+            NodeData::MapObjSet { name, .. } => {
+                if !object_types.contains(name) {
+                    object_types.push(name.clone());
+                }
+            }
+            NodeData::MapItemSet { name, .. } => {
+                if !item_types.contains(name) {
+                    item_types.push(name.clone());
+                }
+            }
+            NodeData::MapEnemySet { name, .. } => {
+                if !enemy_types.contains(name) {
+                    enemy_types.push(name.clone());
+                }
+            }
+            NodeData::MapTerrain { collision_type, .. } => {
+                if !collision_types.contains(collision_type) {
+                    collision_types.push(collision_type.clone());
+                }
+            }
+            _ => {}
+        }
+
+        // do the same for children
+        for child in self.available_children() {
+            child.collect_strings(object_types, item_types, collision_types, enemy_types);
+        }
+    }
+
     pub fn read(reader: &mut Reader) -> Result<Self> {
         let node_type_raw = reader.read_u32()?;
         let node_type = MapNodeType::from_repr(node_type_raw)
