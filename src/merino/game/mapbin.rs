@@ -111,8 +111,8 @@ pub enum NodeData {
 
     MapObjSet {
         name: String,
-        position: Vec2f,
-        unk3: Vec2f,
+        position: Vec3f,
+        unk3: f32,
         unk4: Vec2f,
         unk5: String,
         unk6: Option<i32>,    // >= 4.43
@@ -384,8 +384,8 @@ impl MapDataNode {
 
             MapNodeType::MapObjSet => NodeData::MapObjSet {
                 name: reader.read_object_type()?,
-                position: reader.read_object::<Vec2f>()?,
-                unk3: reader.read_object::<Vec2f>()?,
+                position: reader.read_object::<Vec3f>()?,
+                unk3: reader.read_f32()?,
                 unk4: reader.read_object::<Vec2f>()?,
                 unk5: reader.read_string(32)?,
                 unk6: reader.read_at_version(4.43, |r| r.read_i32())?,

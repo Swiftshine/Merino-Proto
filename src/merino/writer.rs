@@ -156,7 +156,7 @@ impl Writer {
                 let index = self.get_index_of(&mapbin.object_types, name, "Object")?;
                 self.write_u32(index)?;
                 position.write(self, version)?;
-                unk3.write(self, version)?;
+                self.write_f32(*unk3)?;
                 unk4.write(self, version)?;
                 self.write_string(unk5, 32)?;
                 self.write_at_version(version, 4.43, unk6, |w, v| w.write_i32(*v))?;

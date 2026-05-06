@@ -1,6 +1,9 @@
 use crate::merino::{
     game::mapbin::{MapNodeType, NodeData},
-    level_editor::{LevelEditor, NodePath, le_traits::Editable},
+    level_editor::{
+        LevelEditor, NodePath,
+        le_traits::{EditInfo, Editable},
+    },
 };
 
 impl LevelEditor {
@@ -33,11 +36,31 @@ impl LevelEditor {
 
     fn edit_mapobjset_properties(ui: &mut egui::Ui, node_data: &mut NodeData) {
         // blah blah
-        if let NodeData::MapObjSet { name, position, .. } = node_data {
-            ui.label("Name");
-            ui.add(egui::TextEdit::singleline(name).char_limit(32));
-            ui.label("Position");
-            position.edit_properties(ui);
+        if let NodeData::MapObjSet {
+            name,
+            position,
+            unk3,
+            unk4,
+            unk5,
+            unk6,
+            unk7,
+            unk8,
+            unk9,
+            unk10,
+            unk11,
+            unk12,
+            unk13,
+            params,
+            unk14,
+        } = node_data
+        {
+            name.edit_properties(ui, EditInfo::string("Name", 32));
+            position.edit_properties(ui, EditInfo::value("Position"));
+            unk3.edit_properties(ui, EditInfo::value("Unk 3"));
+            unk4.edit_properties(ui, EditInfo::value("Unk 4"));
+            unk5.edit_properties(ui, EditInfo::string("Unk 5", 32));
+            unk6.edit_properties(ui, EditInfo::value("Unk 6"));
+            params.edit_properties(ui, None);
         }
     }
 }

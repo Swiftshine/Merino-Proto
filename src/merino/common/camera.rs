@@ -1,4 +1,4 @@
-use crate::merino::game::mapbin::Vec2f;
+use crate::merino::game::mapbin::{Vec2f, Vec3f};
 
 // to distinguish it from a potential 3D camera
 pub struct CanvasCamera {
@@ -91,6 +91,24 @@ impl CanvasCamera {
     pub fn reset(&mut self) {
         self.position = Default::default();
         self.zoom = 1.0;
+    }
+}
+
+impl From<Vec3f> for Vec2f {
+    fn from(v: Vec3f) -> Self {
+        Self { x: v.x, y: v.y }
+    }
+}
+
+impl From<&Vec3f> for Vec2f {
+    fn from(v: &Vec3f) -> Self {
+        Self { x: v.x, y: v.y }
+    }
+}
+
+impl From<&mut Vec3f> for Vec2f {
+    fn from(v: &mut Vec3f) -> Self {
+        Self { x: v.x, y: v.y }
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::merino::{
-    game::mapbin::{MapDataNode, MapNodeType, NodeData},
+    game::mapbin::{MapDataNode, MapNodeType, NodeData, Vec2f},
     level_editor::{LevelEditor, LevelEditorState, NodePath},
 };
 
@@ -90,8 +90,10 @@ impl MapDataNode {
 
             MapNodeType::MapObjSet => {
                 if let NodeData::MapObjSet { name, position, .. } = &mut self.node_data {
-                    let screen_pos =
-                        canvas_rect.min + state.camera.convert_to_camera(position.into());
+                    let screen_pos = canvas_rect.min
+                        + state
+                            .camera
+                            .convert_to_camera(Vec2f::from(*position).into());
 
                     let square = egui::Rect::from_center_size(
                         egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
