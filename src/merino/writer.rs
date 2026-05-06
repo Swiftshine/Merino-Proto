@@ -26,7 +26,7 @@ impl Writer {
 
     // primitives
 
-    fn write_i32(&mut self, val: i32) -> Result<()> {
+    pub fn write_i32(&mut self, val: i32) -> Result<()> {
         self.buffer.write_i32::<BigEndian>(val)?;
         Ok(())
     }
@@ -36,12 +36,12 @@ impl Writer {
         Ok(())
     }
 
-    fn write_f32(&mut self, val: f32) -> Result<()> {
+    pub fn write_f32(&mut self, val: f32) -> Result<()> {
         self.buffer.write_f32::<BigEndian>(val)?;
         Ok(())
     }
 
-    fn write_string(&mut self, string: &String, size: usize) -> Result<()> {
+    pub fn write_string(&mut self, string: &String, size: usize) -> Result<()> {
         let bytes = string.as_bytes();
 
         let len = bytes.len().min(size);
@@ -446,37 +446,4 @@ impl Writer {
 
 pub fn write_level(mapbin: &Mapbin) -> Result<Vec<u8>> {
     Writer::new().write_level(mapbin)
-}
-
-// impls
-impl Writable for Vec2f {
-    fn write(&self, writer: &mut Writer, _: f32) -> Result<()> {
-        writer.write_f32(self.x)?;
-        writer.write_f32(self.y)?;
-        Ok(())
-    }
-}
-
-impl Writable for Vec3f {
-    fn write(&self, writer: &mut Writer, _: f32) -> Result<()> {
-        writer.write_f32(self.x)?;
-        writer.write_f32(self.y)?;
-        writer.write_f32(self.z)?;
-        Ok(())
-    }
-}
-
-impl<const N: usize> Writable for Params<N> {
-    fn write(&self, writer: &mut Writer, _: f32) -> Result<()> {
-        for v in self.int_values {
-            writer.write_i32(v)?;
-        }
-        for v in self.float_values {
-            writer.write_f32(v)?;
-        }
-        for v in &self.string_values {
-            writer.write_string(v, 64)?;
-        }
-        Ok(())
-    }
 }
