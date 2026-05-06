@@ -64,6 +64,7 @@ impl LevelEditor {
             unk11.edit_properties(ui, EditInfo::label("Unk 11"));
             unk12.edit_properties(ui, EditInfo::label("Unk 12"));
             unk13.edit_properties(ui, EditInfo::label("Unk 13"));
+            unk14.edit_properties(ui, EditInfo::label("Unk 14"));
             params.edit_properties(ui, None);
         }
     }

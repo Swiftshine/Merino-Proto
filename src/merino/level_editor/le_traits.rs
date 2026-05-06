@@ -128,3 +128,23 @@ impl<const N: usize> Editable for Params<N> {
         });
     }
 }
+
+// todo! make this not suck
+impl<T, const N: usize> Editable for [T; N]
+where
+    T: Editable,
+{
+    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+        if let Some(EditInfo::Label(label)) = info {
+            ui.collapsing(label, |ui| {
+                for item in self.iter_mut() {
+                    item.edit_properties(ui, None);
+                }
+            });
+        } else {
+            for item in self.iter_mut() {
+                item.edit_properties(ui, None);
+            }
+        }
+    }
+}
