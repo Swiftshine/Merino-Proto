@@ -180,20 +180,10 @@ impl<'a> Reader<'a> {
         self.get_string_by_index(&self.collision_types, index, "Collision")
     }
 
-    pub fn read_rect_type(&mut self) -> Result<String> {
-        let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.rect_types, index, "Rect")
-    }
-
-    pub fn read_enemy_type(&mut self) -> Result<String> {
-        let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.enemy_types, index, "Enemy")
-    }
-
-    pub fn read_unk_type_1(&mut self) -> Result<String> {
-        let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.unk_types_1, index, "Unk1")
-    }
+    // pub fn read_unk_type_1(&mut self) -> Result<String> {
+    //     let index = self.read_u32()? as usize;
+    //     self.get_string_by_index(&self.unk_types_1, index, "Unk1")
+    // }
 }
 
 pub fn read_level(bytes: &[u8]) -> Result<Mapbin> {

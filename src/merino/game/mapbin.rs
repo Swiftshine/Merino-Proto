@@ -1,4 +1,7 @@
-use crate::merino::reader::{Readable, Reader};
+use crate::merino::{
+    level_editor::NodeBranch,
+    reader::{Readable, Reader},
+};
 use anyhow::{Result, anyhow};
 use strum::FromRepr;
 
@@ -18,7 +21,7 @@ pub enum MapNodeType {
     MapTerrain = 9,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec2f {
     pub x: f32,
     pub y: f32,
@@ -36,7 +39,7 @@ impl Readable for Vec2f {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec3f {
     pub x: f32,
     pub y: f32,
@@ -230,7 +233,7 @@ pub struct MapDataNode {
 }
 
 impl MapDataNode {
-    pub fn children(&self) -> impl Iterator<Item = &MapDataNode> {
+    pub fn available_children(&self) -> impl Iterator<Item = &MapDataNode> {
         let subs = [
             &self.sub1,
             &self.sub2,
@@ -244,6 +247,52 @@ impl MapDataNode {
         ];
 
         subs.into_iter().flatten().flatten()
+    }
+
+    pub fn available_children_mut(&mut self) -> impl Iterator<Item = &mut MapDataNode> {
+        let subs = [
+            &mut self.sub1,
+            &mut self.sub2,
+            &mut self.sub4,
+            &mut self.sub8,
+            &mut self.sub10,
+            &mut self.sub20,
+            &mut self.sub40,
+            &mut self.sub80,
+            &mut self.sub100,
+        ];
+
+        subs.into_iter().flatten().flatten()
+    }
+
+    /// Returns an iterator over (folder, index, child)
+    pub fn all_children_mut(
+        &mut self,
+    ) -> impl Iterator<Item = (NodeBranch, usize, &mut MapDataNode)> {
+        let mut items = Vec::new();
+
+        // helper macro to reduce boilerplate
+        macro_rules! collect_sub {
+            ($branch:ident, $field:ident) => {
+                if let Some(vec) = &mut self.$field {
+                    for (i, node) in vec.iter_mut().enumerate() {
+                        items.push((NodeBranch::$branch, i, node));
+                    }
+                }
+            };
+        }
+
+        collect_sub!(Sub1, sub1);
+        collect_sub!(Sub2, sub2);
+        collect_sub!(Sub4, sub4);
+        collect_sub!(Sub8, sub8);
+        collect_sub!(Sub10, sub10);
+        collect_sub!(Sub20, sub20);
+        collect_sub!(Sub40, sub40);
+        collect_sub!(Sub80, sub80);
+        collect_sub!(Sub100, sub100);
+
+        items.into_iter()
     }
 }
 

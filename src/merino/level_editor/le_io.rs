@@ -5,7 +5,7 @@ use anyhow::Result;
 use rfd::FileDialog;
 
 impl LevelEditor {
-    pub fn open_file(&mut self, ctx: &egui::Context) -> Result<()> {
+    pub fn open_file(&mut self, _ctx: &egui::Context) -> Result<()> {
         // ask user to open file
         // for now we're opening the mapbin directly
         if let Some(path) = FileDialog::new()
@@ -19,8 +19,6 @@ impl LevelEditor {
             self.mapdata = read_level(&data)?;
 
             self.file_open = true;
-
-            println!("opened file!");
         }
 
         Ok(())

@@ -1,7 +1,9 @@
-pub mod game;
-pub mod level_editor;
-pub mod reader;
+mod common;
+mod game;
+mod level_editor;
+mod reader;
 mod views;
+
 use anyhow::Result;
 use eframe::{NativeOptions, egui};
 
