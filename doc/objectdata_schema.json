@@ -2,6 +2,7 @@
     "MapObjSet": {
         "[placeholder MapObj]": {
             "description": "[placeholder description]",
+            "display_name": "A more suitable name displayed in-editor.",
             "parameters": {
                 "Parameter 1": {
                     "data_type": "int",
