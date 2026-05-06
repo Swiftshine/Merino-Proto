@@ -1,0 +1,38 @@
+{
+    "MapObjSet": {
+        "[placeholder MapObj]": {
+            "description": "[placeholder description]",
+            "parameters": {
+                "Parameter 1": {
+                    "data_type": "int",
+                    "slot": 0,
+                    "description": "[placeholder description]",
+                    "note": "An optional note."
+                }
+            }
+        }
+    },
+    "MapItemSet": {
+        "[placeholder MapItem]": {
+            "description": "The format for any structure that contains Params<N> is more or less the same."
+        }
+    },
+    "MapEnemySet": {
+        "[placeholder MapEnemy]": {
+            "description": "They're just descriminated by the actual object type in this JSON file."
+        }
+    },
+    "MapLocatorSet": {
+        "[placeholder MapLocator]": {
+            "description": "This is just for the sake of having things be clear."
+        }
+    },
+    "MapPathSet": {
+        "[placeholder MapPath]": {
+            "description": "You get the idea. You can find *actual* object information at https://github.com/Swiftshine/yww-objectdb."
+        }
+    },
+    "MapRectSet": {},
+    "MapCircleSet": {},
+    "MapTerrainSet": {}
+}
