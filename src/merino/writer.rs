@@ -15,7 +15,7 @@ pub trait Writable {
     fn write(&self, writer: &mut Writer, version: f32) -> Result<()>;
 }
 
-struct Writer {
+pub struct Writer {
     pub buffer: Vec<u8>,
 }
 

@@ -38,112 +38,55 @@ where
     }
 }
 
-impl Editable for u32 {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::Value { label }) = info {
-            ui.collapsing(label, |ui| {
-                ui.horizontal(|ui| {
-                    ui.add(
-                        egui::DragValue::new(self)
-                            .speed(1)
-                            .range(Self::MIN..=Self::MAX),
-                    );
-                });
-            });
-        } else {
-            // just as-is
-            ui.add(
-                egui::DragValue::new(self)
-                    .speed(1)
-                    .range(Self::MIN..=Self::MAX),
-            );
-        }
-    }
-}
+macro_rules! impl_editable_numeric {
+    ($($t:ty),*) => {
+        $(
+            impl Editable for $t {
+                fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+                    let mut render = |ui: &mut egui::Ui| {
+                        ui.add(egui::DragValue::new(self)
+                            .speed(1.0)
+                            .range(<$t>::MIN..=<$t>::MAX));
+                    };
 
-impl Editable for i32 {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::Value { label }) = info {
-            ui.collapsing(label, |ui| {
-                ui.horizontal(|ui| {
-                    ui.add(
-                        egui::DragValue::new(self)
-                            .speed(1)
-                            .range(Self::MIN..=Self::MAX),
-                    );
-                });
-            });
-        } else {
-            ui.add(
-                egui::DragValue::new(self)
-                    .speed(1)
-                    .range(Self::MIN..=Self::MAX),
-            );
-        }
-    }
-}
-
-impl Editable for f32 {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::Value { label }) = info {
-            ui.collapsing(label, |ui| {
-                ui.horizontal(|ui| {
-                    ui.add(
-                        egui::DragValue::new(self)
-                            .speed(1)
-                            .range(Self::MIN..=Self::MAX),
-                    );
-                });
-            });
-        } else {
-            ui.add(
-                egui::DragValue::new(self)
-                    .speed(1)
-                    .range(Self::MIN..=Self::MAX),
-            );
-        }
-    }
-}
-
-impl Editable for Vec2f {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::Value { label }) = info {
-            ui.collapsing(label, |ui| {
-                ui.horizontal(|ui| {
-                    let items = [("X", &mut self.x), ("Y", &mut self.y)];
-                    for (item_label, value) in items {
-                        ui.label(item_label);
-                        ui.add(
-                            egui::DragValue::new(value)
-                                .speed(0.5)
-                                .range(f32::MIN..=f32::MAX),
-                        );
+                    if let Some(EditInfo::Value { label }) = info {
+                        // this is its own attribute
+                        ui.collapsing(label, |ui| ui.horizontal(render));
+                    } else {
+                        // this is part of an existing attribute
+                        render(ui);
                     }
-                });
-            });
-        }
-    }
+                }
+            }
+        )*
+    };
 }
 
-impl Editable for Vec3f {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
-        if let Some(EditInfo::Value { label }) = info {
-            ui.collapsing(label, |ui| {
-                ui.horizontal(|ui| {
-                    let items = [("X", &mut self.x), ("Y", &mut self.y), ("Z", &mut self.z)];
-                    for (label, value) in items {
-                        ui.label(label);
-                        ui.add(
-                            egui::DragValue::new(value)
-                                .speed(0.5)
-                                .range(f32::MIN..=f32::MAX),
-                        );
-                    }
-                });
-            });
+impl_editable_numeric!(u32, i32, f32);
+
+macro_rules! impl_editable_vec {
+    ($t:ty, [$($field:ident),*]) => {
+        impl Editable for $t {
+            fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+                if let Some(EditInfo::Value { label }) = info {
+                    ui.collapsing(label, |ui| {
+                        ui.horizontal(|ui| {
+                            $(
+                                ui.label(stringify!($field).to_uppercase());
+                                ui.add(egui::DragValue::new(&mut self.$field)
+                                    .speed(0.5)
+                                    .range(f32::MIN..=f32::MAX));
+                            )*
+                        });
+                    });
+                }
+            }
         }
-    }
+    };
 }
+
+impl_editable_vec!(Vec2f, [x, y]);
+impl_editable_vec!(Vec3f, [x, y, z]);
 
 impl Editable for String {
     fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {

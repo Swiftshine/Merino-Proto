@@ -5,6 +5,7 @@
 - [x] Level parsing
 - [ ] Level viewing
 - [ ] Level editing
+    - [ ] Parameter Parsing
 - [x] Level saving
 
 ## Things to add in the final
@@ -13,3 +14,4 @@
 - [ ] Model loading (hopefully from BFRES)
 - [ ] BSON utility
 - [ ] little endian (3DS) support
+- [ ] object image renders

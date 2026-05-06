@@ -9,6 +9,7 @@ mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
 mod le_io;
+mod le_params;
 mod le_traits;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

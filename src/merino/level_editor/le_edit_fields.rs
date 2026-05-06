@@ -19,11 +19,9 @@ impl LevelEditor {
                 egui::Frame::popup(ui.style())
                     .inner_margin(egui::Vec2::splat(8.0))
                     .show(ui, |ui| {
-                        let base_label = "Edit node properties ".to_string();
-
                         let node_type_string = node.node_type.to_string();
+                        ui.label(format!("Edit node properties ({node_type_string})"));
 
-                        ui.label(format!("{} ({})", base_label, node_type_string));
                         match node.node_type {
                             MapNodeType::MapObjSet => {
                                 Self::edit_mapobjset_properties(ui, &mut node.node_data);
@@ -35,7 +33,6 @@ impl LevelEditor {
     }
 
     fn edit_mapobjset_properties(ui: &mut egui::Ui, node_data: &mut NodeData) {
-        // blah blah
         if let NodeData::MapObjSet {
             name,
             position,
@@ -60,6 +57,13 @@ impl LevelEditor {
             unk4.edit_properties(ui, EditInfo::value("Unk 4"));
             unk5.edit_properties(ui, EditInfo::string("Unk 5", 32));
             unk6.edit_properties(ui, EditInfo::value("Unk 6"));
+            unk7.edit_properties(ui, EditInfo::string("Unk 7", 32));
+            unk8.edit_properties(ui, EditInfo::value("Unk 8"));
+            unk9.edit_properties(ui, EditInfo::value("Unk 9"));
+            unk10.edit_properties(ui, EditInfo::value("Unk 10"));
+            unk11.edit_properties(ui, EditInfo::value("Unk 11"));
+            unk12.edit_properties(ui, EditInfo::value("Unk 12"));
+            unk13.edit_properties(ui, EditInfo::value("Unk 13"));
             params.edit_properties(ui, None);
         }
     }

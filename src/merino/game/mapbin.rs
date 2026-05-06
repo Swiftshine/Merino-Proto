@@ -249,21 +249,21 @@ impl MapDataNode {
         subs.into_iter().flatten().flatten()
     }
 
-    pub fn available_children_mut(&mut self) -> impl Iterator<Item = &mut MapDataNode> {
-        let subs = [
-            &mut self.sub1,
-            &mut self.sub2,
-            &mut self.sub4,
-            &mut self.sub8,
-            &mut self.sub10,
-            &mut self.sub20,
-            &mut self.sub40,
-            &mut self.sub80,
-            &mut self.sub100,
-        ];
+    // pub fn available_children_mut(&mut self) -> impl Iterator<Item = &mut MapDataNode> {
+    //     let subs = [
+    //         &mut self.sub1,
+    //         &mut self.sub2,
+    //         &mut self.sub4,
+    //         &mut self.sub8,
+    //         &mut self.sub10,
+    //         &mut self.sub20,
+    //         &mut self.sub40,
+    //         &mut self.sub80,
+    //         &mut self.sub100,
+    //     ];
 
-        subs.into_iter().flatten().flatten()
-    }
+    //     subs.into_iter().flatten().flatten()
+    // }
 
     /// Returns an iterator over (folder, index, child)
     pub fn all_children_mut(
