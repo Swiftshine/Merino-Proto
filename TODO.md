@@ -18,4 +18,4 @@
 - [ ] BSON utility
 - [ ] little endian (3DS) support
 - [ ] object image renders
-- [ ] docking
+- [x] docking
