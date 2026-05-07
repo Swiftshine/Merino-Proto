@@ -17,7 +17,10 @@ impl LevelEditor {
         // edit objects
         self.edit_all_nodes(ui, rect);
 
-        // process inputs
-        self.handle_inputs(ui);
+        if response.hovered() {
+            // process inputs
+            self.handle_mouse_inputs(ui);
+            self.handle_keyboard_inputs(ui);
+        }
     }
 }

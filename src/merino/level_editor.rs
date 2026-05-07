@@ -9,6 +9,7 @@ use strum::{Display, EnumIter};
 mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
+mod le_inputs;
 mod le_io;
 mod le_params;
 mod le_traits;
@@ -25,22 +26,6 @@ pub enum NodeChildType {
     MapCircle,
     MapTerrain,
 }
-
-// impl NodeChildType {
-//     pub fn as_str(&self) -> &'static str {
-//         match self {
-//             Self::MapPolySet => "[MapPolySet]",
-//             Self::MapObjSet => "[MapObjSet]",
-//             Self::MapItemSet => "[MapItemSet]",
-//             Self::MapEnemySet => "[MapEnemySet]",
-//             Self::MapLocator => "[MapLocator]",
-//             Self::MapPath => "[MapPath]",
-//             Self::MapRect => "[MapRect]",
-//             Self::MapCircle => "[MapCircle]",
-//             Self::MapTerrain => "[MapTerrain]",
-//         }
-//     }
-// }
 
 // in order to keep track of which nodes are selected.
 // this is indicated in sequential traversal order
@@ -198,7 +183,7 @@ impl LevelEditor {
         // });
     }
 
-    pub fn handle_inputs(&mut self, ui: &mut egui::Ui) {
+    pub fn handle_mouse_inputs(&mut self, ui: &mut egui::Ui) {
         let secondary_down = ui.input(|i| i.pointer.button_down(egui::PointerButton::Secondary));
 
         // camera pan
@@ -209,16 +194,6 @@ impl LevelEditor {
                     .camera
                     .pan(delta / self.canvas_context.camera.zoom);
             }
-        }
-
-        // pan reset handling
-        if secondary_down && ui.input(|i| i.key_pressed(egui::Key::R)) {
-            self.canvas_context.camera.reset();
-        }
-
-        // clear selections
-        if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
-            self.canvas_context.selected_node_paths.clear();
         }
     }
 }
