@@ -1,3 +1,4 @@
+use crate::merino::common::emoji::*;
 use std::path::PathBuf;
 
 use crate::merino::{
@@ -66,9 +67,11 @@ pub struct ObjectPropertyEditorContext {
 //     }
 // }
 
+#[derive(PartialEq)]
 pub enum Tab {
     Canvas,
     ObjectProperties,
+    AddObject,
 }
 
 struct TabViewer<'a> {
@@ -80,8 +83,9 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
         match tab {
-            Tab::Canvas => "Canvas",
-            Tab::ObjectProperties => "Object Properties",
+            Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
+            Tab::ObjectProperties => EmojiMessage::memo_msg("Object Properties"),
+            Tab::AddObject => EmojiMessage::add_msg("Add Object"),
         }
         .into()
     }
@@ -103,6 +107,10 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
                 } else {
                     ui.centered_and_justified(|ui| ui.label("Select exactly one object to edit."));
                 }
+            }
+
+            Tab::AddObject => {
+                ui.label("blah blah");
             }
         }
     }
@@ -160,10 +168,23 @@ impl LevelEditor {
                 if ui.button("Load Parameter Data").clicked() {
                     let _ = self.load_param_data();
                 }
+
+                if ui.button(EmojiMessage::palette_msg("Canvas")).clicked() {
+                    self.open_tab(Tab::Canvas);
+                }
+
+                if ui
+                    .button(EmojiMessage::memo_msg("Object Properties"))
+                    .clicked()
+                {
+                    self.open_tab(Tab::ObjectProperties)
+                }
+
+                if ui.button(EmojiMessage::add_msg("Add Object")).clicked() {
+                    self.open_tab(Tab::AddObject)
+                }
             });
         });
-
-        // canvas
 
         // temporarily move dock_state to avoid borrowing &mut self twice
         let mut dock_state =
@@ -175,12 +196,6 @@ impl LevelEditor {
 
         // then put it back
         self.dock_state = dock_state;
-
-        // egui::CentralPanel::default().show(ui.ctx(), |ui| {
-        //     if self.io_context.file_open {
-        //         self.show_canvas(ui);
-        //     }
-        // });
     }
 
     pub fn handle_mouse_inputs(&mut self, ui: &mut egui::Ui) {
@@ -194,6 +209,18 @@ impl LevelEditor {
                     .camera
                     .pan(delta / self.canvas_context.camera.zoom);
             }
+        }
+    }
+
+    /// Checks if the tab is open, and if not, opens it.
+    fn open_tab(&mut self, tab: Tab) {
+        if !self
+            .dock_state
+            .main_surface()
+            .iter()
+            .any(|node| node.tabs().map_or(false, |tabs| tabs.contains(&tab)))
+        {
+            self.dock_state.main_surface_mut().push_to_focused_leaf(tab);
         }
     }
 }

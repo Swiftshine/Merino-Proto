@@ -93,7 +93,7 @@ impl LevelEditor {
                                                     ),
                                                     |ui| {
                                                         if ui
-                                                            .button(ICON_DISCARD)
+                                                            .button(EmojiMessage::discard())
                                                             .on_hover_text("Delete Node")
                                                             .clicked()
                                                         {
@@ -143,7 +143,7 @@ impl LevelEditor {
                         // todo - make the warning togglable
                         ui.colored_label(
                             egui::Color32::LIGHT_RED,
-                            &format!("{ICON_WARNING} Warning: this node contains children."),
+                            EmojiMessage::warning_msg("Warning: This node contains children."),
                         );
                         ui.label("Deleting it will remove all nested nodes.");
                     } else {
