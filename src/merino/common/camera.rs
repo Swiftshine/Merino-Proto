@@ -25,7 +25,7 @@ impl CanvasCamera {
 
         let is_mouse_over_canvas = ctx.input(|i| {
             if let Some(pos) = i.pointer.hover_pos() {
-                canvas_response.rect.contains(pos) && canvas_response.hovered()
+                i.content_rect().contains(pos)
             } else {
                 false
             }
@@ -46,14 +46,6 @@ impl CanvasCamera {
                 let world_pos_after = self.convert_from_camera(mouse_pos);
                 self.position += world_pos_before - world_pos_after;
             }
-        }
-
-        // pan reset handling
-
-        if canvas_response.dragged_by(egui::PointerButton::Secondary)
-            && ctx.input(|i| i.key_pressed(egui::Key::R))
-        {
-            self.reset();
         }
 
         if self.center_attempted {

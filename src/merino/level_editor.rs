@@ -101,10 +101,19 @@ impl LevelEditor {
     }
 
     pub fn handle_inputs(&mut self, ui: &mut egui::Ui, response: &egui::Response) {
+        let secondary_down = ui.input(|i| i.pointer.button_down(egui::PointerButton::Secondary));
+
         // camera pan
-        if response.dragged_by(egui::PointerButton::Secondary) {
-            let delta = response.drag_delta();
-            self.state.camera.pan(delta / self.state.camera.zoom)
+        if secondary_down {
+            let delta = ui.input(|i| i.pointer.delta());
+            if delta != egui::Vec2::ZERO {
+                self.state.camera.pan(delta / self.state.camera.zoom);
+            }
+        }
+
+        // pan reset handling
+        if secondary_down && ui.input(|i| i.key_pressed(egui::Key::R)) {
+            self.state.camera.reset();
         }
 
         // clear selections
