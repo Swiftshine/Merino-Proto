@@ -1,9 +1,8 @@
-use crate::merino::level_editor::NodeBranch;
+use crate::merino::level_editor::{NodeBranch, NodePath};
 use std::fmt::Display;
+use strum::{AsRefStr, Display, EnumString, FromRepr};
 
-use strum::{AsRefStr, Display, FromRepr};
-
-#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone)]
+#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone, EnumString, PartialEq)]
 #[repr(u32)]
 pub enum MapNodeType {
     #[default]
@@ -22,6 +21,12 @@ pub enum MapNodeType {
 // a string with a char limit
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct LimitedString<const N: usize>(pub String);
+
+impl<const N: usize> LimitedString<N> {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
 
 impl<const N: usize> From<String> for LimitedString<N> {
     fn from(string: String) -> Self {
@@ -201,6 +206,48 @@ pub struct MapDataNode {
 }
 
 impl MapDataNode {
+    fn collect_strings(
+        &self,
+        object_types: &mut Vec<String32>,
+        item_types: &mut Vec<String32>,
+        collision_types: &mut Vec<String32>,
+        enemy_types: &mut Vec<String32>,
+    ) {
+        match &self.node_data {
+            NodeData::MapPolySet { collision_type, .. } => {
+                if !collision_types.contains(collision_type) {
+                    collision_types.push(collision_type.clone());
+                }
+            }
+            NodeData::MapObjSet { name, .. } => {
+                if !object_types.contains(name) {
+                    object_types.push(name.clone());
+                }
+            }
+            NodeData::MapItemSet { name, .. } => {
+                if !item_types.contains(name) {
+                    item_types.push(name.clone());
+                }
+            }
+            NodeData::MapEnemySet { name, .. } => {
+                if !enemy_types.contains(name) {
+                    enemy_types.push(name.clone());
+                }
+            }
+            NodeData::MapTerrain { collision_type, .. } => {
+                if !collision_types.contains(collision_type) {
+                    collision_types.push(collision_type.clone());
+                }
+            }
+            _ => {}
+        }
+
+        // do the same for children
+        for child in self.available_children() {
+            child.collect_strings(object_types, item_types, collision_types, enemy_types);
+        }
+    }
+
     pub fn available_children(&self) -> impl Iterator<Item = &MapDataNode> {
         let subs = [
             &self.sub1,
@@ -285,48 +332,26 @@ impl Mapbin {
             &mut self.enemy_types,
         );
     }
-}
 
-impl MapDataNode {
-    fn collect_strings(
-        &self,
-        object_types: &mut Vec<String32>,
-        item_types: &mut Vec<String32>,
-        collision_types: &mut Vec<String32>,
-        enemy_types: &mut Vec<String32>,
-    ) {
-        match &self.node_data {
-            NodeData::MapPolySet { collision_type, .. } => {
-                if !collision_types.contains(collision_type) {
-                    collision_types.push(collision_type.clone());
-                }
-            }
-            NodeData::MapObjSet { name, .. } => {
-                if !object_types.contains(name) {
-                    object_types.push(name.clone());
-                }
-            }
-            NodeData::MapItemSet { name, .. } => {
-                if !item_types.contains(name) {
-                    item_types.push(name.clone());
-                }
-            }
-            NodeData::MapEnemySet { name, .. } => {
-                if !enemy_types.contains(name) {
-                    enemy_types.push(name.clone());
-                }
-            }
-            NodeData::MapTerrain { collision_type, .. } => {
-                if !collision_types.contains(collision_type) {
-                    collision_types.push(collision_type.clone());
-                }
-            }
-            _ => {}
+    pub fn get_node_at_path(&mut self, path: NodePath) -> Option<&mut MapDataNode> {
+        let mut current = &mut self.root;
+
+        for (branch, index) in path {
+            let vec = match branch {
+                NodeBranch::Sub1 => &mut current.sub1,
+                NodeBranch::Sub2 => &mut current.sub2,
+                NodeBranch::Sub4 => &mut current.sub4,
+                NodeBranch::Sub8 => &mut current.sub8,
+                NodeBranch::Sub10 => &mut current.sub10,
+                NodeBranch::Sub20 => &mut current.sub20,
+                NodeBranch::Sub40 => &mut current.sub40,
+                NodeBranch::Sub80 => &mut current.sub80,
+                NodeBranch::Sub100 => &mut current.sub100,
+            };
+
+            current = vec.as_mut()?.get_mut(index)?;
         }
 
-        // do the same for children
-        for child in self.available_children() {
-            child.collect_strings(object_types, item_types, collision_types, enemy_types);
-        }
+        Some(current)
     }
 }

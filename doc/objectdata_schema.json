@@ -23,17 +23,17 @@
             "description": "They're just descriminated by the actual object type in this JSON file."
         }
     },
-    "MapLocatorSet": {
+    "MapLocator": {
         "[placeholder MapLocator]": {
             "description": "This is just for the sake of having things be clear."
         }
     },
-    "MapPathSet": {
+    "MapPath": {
         "[placeholder MapPath]": {
             "description": "You get the idea. You can find *actual* object information at https://github.com/Swiftshine/yww-objectdb."
         }
     },
-    "MapRectSet": {},
-    "MapCircleSet": {},
-    "MapTerrainSet": {}
+    "MapRect": {},
+    "MapCircle": {},
+    "MapTerrain": {}
 }

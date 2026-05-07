@@ -1,4 +1,7 @@
-use crate::merino::game::mapbin::{LimitedString, Params, Vec2f, Vec3f};
+use crate::merino::{
+    game::mapbin::{LimitedString, MapNodeType, Params, Vec2f, Vec3f},
+    level_editor::le_params::{ParameterDataType, ParameterObject},
+};
 
 /// A trait to simplify property parsing.
 pub trait Editable {
@@ -7,11 +10,22 @@ pub trait Editable {
 
 pub enum EditInfo<'a> {
     Label(&'a str),
+    Params(&'a ParameterObject),
 }
 
 impl<'a> EditInfo<'a> {
     pub fn label(label: &'a str) -> Option<Self> {
         Some(Self::Label(label))
+    }
+
+    pub fn search_param(
+        list: &'a [ParameterObject],
+        node_type: MapNodeType,
+        name: &'a str,
+    ) -> Option<Self> {
+        list.iter()
+            .find(|obj| obj.set_type == node_type && obj.name == name)
+            .map(Self::Params)
     }
 }
 
@@ -91,40 +105,95 @@ impl<const N: usize> Editable for LimitedString<N> {
 }
 
 impl<const N: usize> Editable for Params<N> {
-    fn edit_properties(&mut self, ui: &mut egui::Ui, _info: Option<EditInfo>) {
-        // todo: implement some way to enable custom param names
-        // this could easily be implemented into the EditInfo enum
-        // to make it contain a struct that *actually* contains the param info
-        // e.g.
-        // EditInfo::Parameter { fields: ParamFields }
-        // or something like that
-        // for now, though, just display the values as they are
+    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+        if let Some(EditInfo::Params(param_object)) = info {
+            ui.collapsing("Parameters", |ui| {
+                for param in param_object.parameters.iter() {
+                    ui.collapsing(&param.name, |ui| {
+                        if let Some(desc) = &param.description
+                            && !desc.is_empty()
+                        {
+                            ui.label(desc);
+                        }
 
-        // this is where custom-defined parameters would go
-        // ui.collapsing("Parameters", ...);
+                        if let Some(note) = &param.note
+                            && !note.is_empty()
+                        {
+                            ui.label(format!("Note: {note}"));
+                        }
+
+                        match &param.data_type {
+                            ParameterDataType::Int => {
+                                if let Some(val) = self.int_values.get_mut(param.slot) {
+                                    val.edit_properties(ui, None);
+                                }
+                            }
+
+                            ParameterDataType::Float => {
+                                if let Some(val) = self.float_values.get_mut(param.slot) {
+                                    val.edit_properties(ui, None);
+                                }
+                            }
+
+                            ParameterDataType::String => {
+                                if let Some(val) = self.string_values.get_mut(param.slot) {
+                                    val.edit_properties(ui, None);
+                                }
+                            }
+
+                            ParameterDataType::Bool => {
+                                if let Some(val) = self.int_values.get_mut(param.slot) {
+                                    let mut bool_value = *val != 0;
+
+                                    if ui.checkbox(&mut bool_value, "Value").changed() {
+                                        *val = if bool_value { 1 } else { 0 };
+                                    }
+                                }
+                            }
+
+                            ParameterDataType::DropdownInt => {
+                                if let Some(options) = &param.dropdown_options {
+                                    if let Some(val) = self.int_values.get_mut(param.slot) {
+                                        egui::ComboBox::from_label("Value")
+                                            .selected_text(&options[*val as usize].key)
+                                            .show_ui(ui, |ui| {
+                                                for option in options.iter() {
+                                                    ui.selectable_value(
+                                                        val,
+                                                        option.value,
+                                                        &option.key,
+                                                    );
+                                                }
+                                            });
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    });
+                }
+            });
+        }
 
         ui.collapsing("Raw Parameters", |ui| {
-            ui.collapsing("Int Params", |ui| {
-                ui.horizontal(|ui| {
-                    for val in self.int_values.iter_mut() {
-                        val.edit_properties(ui, None);
-                    }
-                });
-            });
-
-            ui.collapsing("Float Params", |ui| {
-                ui.horizontal(|ui| {
-                    for val in self.float_values.iter_mut() {
-                        val.edit_properties(ui, None);
-                    }
-                });
-            });
-
-            ui.collapsing("String Params", |ui| {
-                for val in self.string_values.iter_mut() {
+            ui.label("Int Params");
+            ui.horizontal(|ui| {
+                for val in self.int_values.iter_mut() {
                     val.edit_properties(ui, None);
                 }
             });
+
+            ui.label("Float Params");
+            ui.horizontal(|ui| {
+                for val in self.float_values.iter_mut() {
+                    val.edit_properties(ui, None);
+                }
+            });
+
+            ui.label("String Params");
+            for val in self.string_values.iter_mut() {
+                val.edit_properties(ui, None);
+            }
         });
     }
 }

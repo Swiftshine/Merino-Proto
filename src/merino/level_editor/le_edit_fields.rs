@@ -1,17 +1,19 @@
 use crate::merino::{
     game::mapbin::{MapNodeType, NodeData},
     level_editor::{
-        LevelEditor, NodePath,
+        LevelEditor, LevelEditorState, NodePath,
         le_traits::{EditInfo, Editable},
     },
 };
 
 impl LevelEditor {
     pub fn edit_node_properties(&mut self, ui: &mut egui::Ui, node_path: NodePath) {
-        let node = match self.get_node_at_path(node_path) {
+        let node = match self.mapdata.get_node_at_path(node_path) {
             Some(n) => n,
             None => return,
         };
+
+        let state = &self.state;
 
         egui::Area::new(egui::Id::from("le_node_property_editor"))
             .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::new(-10.0, 10.0))
@@ -24,7 +26,7 @@ impl LevelEditor {
 
                         match node.node_type {
                             MapNodeType::MapObjSet => {
-                                Self::edit_mapobjset_properties(ui, &mut node.node_data);
+                                Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
                             }
                             _ => {}
                         }
@@ -32,7 +34,11 @@ impl LevelEditor {
             });
     }
 
-    fn edit_mapobjset_properties(ui: &mut egui::Ui, node_data: &mut NodeData) {
+    fn edit_mapobjset_properties(
+        ui: &mut egui::Ui,
+        state: &LevelEditorState,
+        node_data: &mut NodeData,
+    ) {
         if let NodeData::MapObjSet {
             name,
             position,
@@ -65,7 +71,15 @@ impl LevelEditor {
             unk12.edit_properties(ui, EditInfo::label("Unk 12"));
             unk13.edit_properties(ui, EditInfo::label("Unk 13"));
             unk14.edit_properties(ui, EditInfo::label("Unk 14"));
-            params.edit_properties(ui, None);
+
+            params.edit_properties(
+                ui,
+                EditInfo::search_param(
+                    &state.parameter_objects,
+                    MapNodeType::MapObjSet,
+                    name.as_str(),
+                ),
+            );
         }
     }
 }

@@ -1,8 +1,15 @@
 use std::fs;
 
-use crate::merino::{level_editor::LevelEditor, reader::read_level, writer::write_level};
-use anyhow::Result;
+use crate::merino::{
+    common::util::{get_merino_folder_path, make_merino_folder, merino_folder_exists},
+    level_editor::LevelEditor,
+    reader::read_level,
+    writer::write_level,
+};
+use anyhow::{Context, Result};
 use rfd::FileDialog;
+
+const OBJECTDATA_FILE: &'static str = "objectdata.json";
 
 impl LevelEditor {
     pub fn open_file(&mut self) -> Result<()> {
@@ -42,5 +49,17 @@ impl LevelEditor {
         // go through every item, check if the string already exists,
         // and add it to the appropriate vec if not
         self.mapdata.collect_new_strings();
+    }
+
+    /// Loads `objectdata.json`
+    pub fn load_param_data(&mut self) -> Result<()> {
+        if !merino_folder_exists()? {
+            make_merino_folder()?;
+        }
+
+        let path = get_merino_folder_path()?.join(OBJECTDATA_FILE);
+        let file = fs::read_to_string(path).context("Could not find objectdata.json")?;
+
+        self.parse_params(file)
     }
 }
