@@ -1,4 +1,4 @@
-use crate::merino::level_editor::{NodeBranch, NodePath};
+use crate::merino::level_editor::{NodeChildType, NodePath};
 use std::fmt::Display;
 use strum::{AsRefStr, Display, EnumString, FromRepr};
 
@@ -16,6 +16,20 @@ pub enum MapNodeType {
     MapRect = 7,
     MapCircle = 8,
     MapTerrain = 9,
+}
+
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum MapNodeFlag {
+    MapPolySet = 0x1,
+    MapObjSet = 0x2,
+    MapItemSet = 0x4,
+    MapEnemySet = 0x8,
+    MapLocator = 0x10,
+    MapPath = 0x20,
+    MapRect = 0x40,
+    MapCircle = 0x80,
+    MapTerrain = 0x100,
 }
 
 // a string with a char limit
@@ -194,15 +208,15 @@ pub enum NodeData {
 pub struct MapDataNode {
     pub node_type: MapNodeType,
     pub node_data: NodeData,
-    pub sub1: Option<Vec<MapDataNode>>,   // MapPolySet
-    pub sub2: Option<Vec<MapDataNode>>,   // MapObjSet
-    pub sub4: Option<Vec<MapDataNode>>,   // MapItemSet
-    pub sub8: Option<Vec<MapDataNode>>,   // MapEnemySet
-    pub sub10: Option<Vec<MapDataNode>>,  // MapLocator
-    pub sub20: Option<Vec<MapDataNode>>,  // MapPath
-    pub sub40: Option<Vec<MapDataNode>>,  // MapRect
-    pub sub80: Option<Vec<MapDataNode>>,  // MapCircle
-    pub sub100: Option<Vec<MapDataNode>>, // MapTerrain
+    pub children_mappolyset: Option<Vec<MapDataNode>>, // MapPolySet
+    pub children_mapobjset: Option<Vec<MapDataNode>>,  // MapObjSet
+    pub children_mapitemset: Option<Vec<MapDataNode>>, // MapItemSet
+    pub children_mapenemyset: Option<Vec<MapDataNode>>, // MapEnemySet
+    pub children_maplocator: Option<Vec<MapDataNode>>, // MapLocator
+    pub children_mappath: Option<Vec<MapDataNode>>,    // MapPath
+    pub children_maprect: Option<Vec<MapDataNode>>,    // MapRect
+    pub children_mapcircle: Option<Vec<MapDataNode>>,  // MapCircle
+    pub children_mapterrain: Option<Vec<MapDataNode>>, // MapTerrain
 }
 
 impl MapDataNode {
@@ -250,15 +264,15 @@ impl MapDataNode {
 
     pub fn available_children(&self) -> impl Iterator<Item = &MapDataNode> {
         let subs = [
-            &self.sub1,
-            &self.sub2,
-            &self.sub4,
-            &self.sub8,
-            &self.sub10,
-            &self.sub20,
-            &self.sub40,
-            &self.sub80,
-            &self.sub100,
+            &self.children_mappolyset,
+            &self.children_mapobjset,
+            &self.children_mapitemset,
+            &self.children_mapenemyset,
+            &self.children_maplocator,
+            &self.children_mappath,
+            &self.children_maprect,
+            &self.children_mapcircle,
+            &self.children_mapterrain,
         ];
 
         subs.into_iter().flatten().flatten()
@@ -283,29 +297,29 @@ impl MapDataNode {
     /// Returns an iterator over (folder, index, child)
     pub fn all_children_mut(
         &mut self,
-    ) -> impl Iterator<Item = (NodeBranch, usize, &mut MapDataNode)> {
+    ) -> impl Iterator<Item = (NodeChildType, usize, &mut MapDataNode)> {
         let mut items = Vec::new();
 
         // helper macro to reduce boilerplate
         macro_rules! collect_sub {
-            ($branch:ident, $field:ident) => {
+            ($child_type:ident, $field:ident) => {
                 if let Some(vec) = &mut self.$field {
                     for (i, node) in vec.iter_mut().enumerate() {
-                        items.push((NodeBranch::$branch, i, node));
+                        items.push((NodeChildType::$child_type, i, node));
                     }
                 }
             };
         }
 
-        collect_sub!(Sub1, sub1);
-        collect_sub!(Sub2, sub2);
-        collect_sub!(Sub4, sub4);
-        collect_sub!(Sub8, sub8);
-        collect_sub!(Sub10, sub10);
-        collect_sub!(Sub20, sub20);
-        collect_sub!(Sub40, sub40);
-        collect_sub!(Sub80, sub80);
-        collect_sub!(Sub100, sub100);
+        collect_sub!(MapPolySet, children_mappolyset);
+        collect_sub!(MapObjSet, children_mapobjset);
+        collect_sub!(MapItemSet, children_mapitemset);
+        collect_sub!(MapEnemySet, children_mapenemyset);
+        collect_sub!(MapLocator, children_maplocator);
+        collect_sub!(MapPath, children_mappath);
+        collect_sub!(MapRect, children_maprect);
+        collect_sub!(MapCircle, children_mapcircle);
+        collect_sub!(MapTerrain, children_mapterrain);
 
         items.into_iter()
     }
@@ -342,15 +356,15 @@ impl Mapbin {
 
         for (branch, index) in path {
             let vec = match branch {
-                NodeBranch::Sub1 => &mut current.sub1,
-                NodeBranch::Sub2 => &mut current.sub2,
-                NodeBranch::Sub4 => &mut current.sub4,
-                NodeBranch::Sub8 => &mut current.sub8,
-                NodeBranch::Sub10 => &mut current.sub10,
-                NodeBranch::Sub20 => &mut current.sub20,
-                NodeBranch::Sub40 => &mut current.sub40,
-                NodeBranch::Sub80 => &mut current.sub80,
-                NodeBranch::Sub100 => &mut current.sub100,
+                NodeChildType::MapPolySet => &mut current.children_mappolyset,
+                NodeChildType::MapObjSet => &mut current.children_mapobjset,
+                NodeChildType::MapItemSet => &mut current.children_mapitemset,
+                NodeChildType::MapEnemySet => &mut current.children_mapenemyset,
+                NodeChildType::MapLocator => &mut current.children_maplocator,
+                NodeChildType::MapPath => &mut current.children_mappath,
+                NodeChildType::MapRect => &mut current.children_maprect,
+                NodeChildType::MapCircle => &mut current.children_mapcircle,
+                NodeChildType::MapTerrain => &mut current.children_mapterrain,
             };
 
             current = vec.as_mut()?.get_mut(*index)?;
@@ -371,15 +385,15 @@ impl Mapbin {
         let parent = self.get_node_at_path(&parent_path)?;
 
         let vec = match branch {
-            NodeBranch::Sub1 => &mut parent.sub1,
-            NodeBranch::Sub2 => &mut parent.sub2,
-            NodeBranch::Sub4 => &mut parent.sub4,
-            NodeBranch::Sub8 => &mut parent.sub8,
-            NodeBranch::Sub10 => &mut parent.sub10,
-            NodeBranch::Sub20 => &mut parent.sub20,
-            NodeBranch::Sub40 => &mut parent.sub40,
-            NodeBranch::Sub80 => &mut parent.sub80,
-            NodeBranch::Sub100 => &mut parent.sub100,
+            NodeChildType::MapPolySet => &mut parent.children_mappolyset,
+            NodeChildType::MapObjSet => &mut parent.children_mapobjset,
+            NodeChildType::MapItemSet => &mut parent.children_mapitemset,
+            NodeChildType::MapEnemySet => &mut parent.children_mapenemyset,
+            NodeChildType::MapLocator => &mut parent.children_maplocator,
+            NodeChildType::MapPath => &mut parent.children_mappath,
+            NodeChildType::MapRect => &mut parent.children_maprect,
+            NodeChildType::MapCircle => &mut parent.children_mapcircle,
+            NodeChildType::MapTerrain => &mut parent.children_mapterrain,
         };
 
         if let Some(v) = vec {

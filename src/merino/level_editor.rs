@@ -12,30 +12,30 @@ mod le_params;
 mod le_traits;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum NodeBranch {
-    Sub1,
-    Sub2,
-    Sub4,
-    Sub8,
-    Sub10,
-    Sub20,
-    Sub40,
-    Sub80,
-    Sub100,
+pub enum NodeChildType {
+    MapPolySet,
+    MapObjSet,
+    MapItemSet,
+    MapEnemySet,
+    MapLocator,
+    MapPath,
+    MapRect,
+    MapCircle,
+    MapTerrain,
 }
 
-impl NodeBranch {
+impl NodeChildType {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::Sub1 => "[MapPolySet]",
-            Self::Sub2 => "[MapObjSet]",
-            Self::Sub4 => "[MapItemSet]",
-            Self::Sub8 => "[MapEnemySet]",
-            Self::Sub10 => "[MapLocator]",
-            Self::Sub20 => "[MapPath]",
-            Self::Sub40 => "[MapRect]",
-            Self::Sub80 => "[MapCircle]",
-            Self::Sub100 => "[MapTerrain]",
+            Self::MapPolySet => "[MapPolySet]",
+            Self::MapObjSet => "[MapObjSet]",
+            Self::MapItemSet => "[MapItemSet]",
+            Self::MapEnemySet => "[MapEnemySet]",
+            Self::MapLocator => "[MapLocator]",
+            Self::MapPath => "[MapPath]",
+            Self::MapRect => "[MapRect]",
+            Self::MapCircle => "[MapCircle]",
+            Self::MapTerrain => "[MapTerrain]",
         }
     }
 }
@@ -44,7 +44,7 @@ impl NodeBranch {
 // this is indicated in sequential traversal order
 // e.g. [[Sub1, 0], [Sub2, 0], [Sub4, 1]] would be:
 // Sub1[0].Sub2[0].Sub4[1]
-pub type NodePath = Vec<(NodeBranch, usize)>;
+pub type NodePath = Vec<(NodeChildType, usize)>;
 
 #[derive(Default)]
 pub struct LevelEditorState {

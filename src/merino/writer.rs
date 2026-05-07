@@ -356,27 +356,27 @@ impl Writer {
         }
 
         let mut flags = 0u32;
-        let sub_refs = [
-            (&node.sub1, 0x1),
-            (&node.sub2, 0x2),
-            (&node.sub4, 0x4),
-            (&node.sub8, 0x8),
-            (&node.sub10, 0x10),
-            (&node.sub20, 0x20),
-            (&node.sub40, 0x40),
-            (&node.sub80, 0x80),
-            (&node.sub100, 0x100),
+        let child_refs = [
+            (&node.children_mappolyset, MapNodeFlag::MapPolySet),
+            (&node.children_mapobjset, MapNodeFlag::MapObjSet),
+            (&node.children_mapitemset, MapNodeFlag::MapItemSet),
+            (&node.children_mapenemyset, MapNodeFlag::MapEnemySet),
+            (&node.children_maplocator, MapNodeFlag::MapLocator),
+            (&node.children_mappath, MapNodeFlag::MapPath),
+            (&node.children_maprect, MapNodeFlag::MapRect),
+            (&node.children_mapcircle, MapNodeFlag::MapCircle),
+            (&node.children_mapterrain, MapNodeFlag::MapTerrain),
         ];
 
-        for (sub, flag) in sub_refs.iter() {
+        for (sub, flag) in child_refs {
             if sub.is_some() {
-                flags |= flag;
+                flags |= flag as u32;
             }
         }
 
         self.write_u32(flags)?;
 
-        for (sub, _) in sub_refs.iter() {
+        for (sub, _) in child_refs.iter() {
             if let Some(nodes) = sub {
                 self.write_u32(nodes.len() as u32)?;
                 for n in nodes {

@@ -226,8 +226,8 @@ impl MapDataNode {
         let flags = reader.read_u32()?;
 
         // helper to read a list of sub-nodes if flag present
-        let mut read_sub_node = |flag: u32| -> Result<Option<Vec<MapDataNode>>> {
-            if (flags & flag) != 0 {
+        let mut read_child_node = |flag: MapNodeFlag| -> Result<Option<Vec<MapDataNode>>> {
+            if (flags & flag as u32) != 0 {
                 let nodes = reader.read_array(|r| Self::read(r))?;
                 Ok(Some(nodes))
             } else {
@@ -238,15 +238,15 @@ impl MapDataNode {
         Ok(MapDataNode {
             node_type,
             node_data,
-            sub1: read_sub_node(0x1)?,
-            sub2: read_sub_node(0x2)?,
-            sub4: read_sub_node(0x4)?,
-            sub8: read_sub_node(0x8)?,
-            sub10: read_sub_node(0x10)?,
-            sub20: read_sub_node(0x20)?,
-            sub40: read_sub_node(0x40)?,
-            sub80: read_sub_node(0x80)?,
-            sub100: read_sub_node(0x100)?,
+            children_mappolyset: read_child_node(MapNodeFlag::MapPolySet)?,
+            children_mapobjset: read_child_node(MapNodeFlag::MapObjSet)?,
+            children_mapitemset: read_child_node(MapNodeFlag::MapItemSet)?,
+            children_mapenemyset: read_child_node(MapNodeFlag::MapEnemySet)?,
+            children_maplocator: read_child_node(MapNodeFlag::MapLocator)?,
+            children_mappath: read_child_node(MapNodeFlag::MapPath)?,
+            children_maprect: read_child_node(MapNodeFlag::MapRect)?,
+            children_mapcircle: read_child_node(MapNodeFlag::MapCircle)?,
+            children_mapterrain: read_child_node(MapNodeFlag::MapTerrain)?,
         })
     }
 }
