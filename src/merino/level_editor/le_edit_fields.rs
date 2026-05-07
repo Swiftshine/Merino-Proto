@@ -26,10 +26,6 @@ impl LevelEditor {
 
         let mut child_to_select = None;
 
-        let node_type_string = node.node_type.to_string();
-        ui.label(format!("Edit node ({node_type_string})"));
-
-        ui.separator();
         ui.label(egui::RichText::new("Properties").strong());
         egui::ScrollArea::vertical()
             .max_height(400.0)
