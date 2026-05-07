@@ -35,6 +35,8 @@ pub struct LevelEditorState {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
     pub parameter_objects: Vec<ParameterObject>,
+    // todo! make this toggleable
+    pub display_dummy_terrain: bool,
 }
 
 // impl LevelEditorState {
@@ -100,7 +102,7 @@ impl LevelEditor {
         });
     }
 
-    pub fn handle_inputs(&mut self, ui: &mut egui::Ui, response: &egui::Response) {
+    pub fn handle_inputs(&mut self, ui: &mut egui::Ui) {
         let secondary_down = ui.input(|i| i.pointer.button_down(egui::PointerButton::Secondary));
 
         // camera pan

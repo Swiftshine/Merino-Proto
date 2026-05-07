@@ -8,6 +8,9 @@ const SQUARE_SIZE: f32 = 2.0;
 const SELECTION_HIGHLIGHT: egui::Color32 =
     egui::Color32::from_rgba_unmultiplied_const(0xFF, 0xFF, 0xFF, 0x10);
 
+/// A list of objects to not display.
+// const DO_NOT_DISPLAY_LIST: [&'static str; 1] = ["dummy_terrain"];
+
 impl LevelEditor {
     pub fn edit_all_nodes(&mut self, ui: &mut egui::Ui, canvas_rect: egui::Rect) {
         let mut path = Vec::new();
@@ -90,51 +93,55 @@ impl MapDataNode {
 
             MapNodeType::MapObjSet => {
                 if let NodeData::MapObjSet { name, position, .. } = &mut self.node_data {
-                    let screen_pos = canvas_rect.min
-                        + state
-                            .camera
-                            .convert_to_camera(Vec2f::from(*position).into());
+                    // check if we should process this at all
 
-                    let square = egui::Rect::from_center_size(
-                        egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
-                        egui::Vec2::splat(SQUARE_SIZE * state.camera.zoom),
-                    );
+                    if state.display_dummy_terrain || name.as_str() != "dummy_terrain" {
+                        let screen_pos = canvas_rect.min
+                            + state
+                                .camera
+                                .convert_to_camera(Vec2f::from(*position).into());
 
-                    let response = ui.interact(
-                        canvas_rect.intersect(square),
-                        egui::Id::new(&current_path),
-                        egui::Sense::click_and_drag(),
-                    );
-
-                    painter.rect_stroke(
-                        square,
-                        0.0,
-                        egui::Stroke::new(1.0, egui::Color32::WHITE),
-                        egui::StrokeKind::Middle,
-                    );
-
-                    if response.clicked_by(egui::PointerButton::Primary) {
-                        state.selected_node_paths.push(current_path.clone());
-                    } else if response.dragged_by(egui::PointerButton::Primary) {
-                        let world_delta = response.drag_delta() / state.camera.zoom;
-                        position.x += world_delta.x;
-                        position.y -= world_delta.y;
-                    }
-
-                    let selected = state.selected_node_paths.contains(current_path);
-
-                    if response.hovered() || selected {
-                        // display name above if hovered
-                        painter.debug_text(
-                            square.center_top() - egui::Vec2::new(0.0, 5.0),
-                            egui::Align2::CENTER_BOTTOM,
-                            egui::Color32::WHITE,
-                            name,
+                        let square = egui::Rect::from_center_size(
+                            egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
+                            egui::Vec2::splat(SQUARE_SIZE * state.camera.zoom),
                         );
-                    }
 
-                    if selected {
-                        painter.rect_filled(square, 0.0, SELECTION_HIGHLIGHT);
+                        let response = ui.interact(
+                            canvas_rect.intersect(square),
+                            egui::Id::new(&current_path),
+                            egui::Sense::click_and_drag(),
+                        );
+
+                        painter.rect_stroke(
+                            square,
+                            0.0,
+                            egui::Stroke::new(1.0, egui::Color32::WHITE),
+                            egui::StrokeKind::Middle,
+                        );
+
+                        if response.clicked_by(egui::PointerButton::Primary) {
+                            state.selected_node_paths.push(current_path.clone());
+                        } else if response.dragged_by(egui::PointerButton::Primary) {
+                            let world_delta = response.drag_delta() / state.camera.zoom;
+                            position.x += world_delta.x;
+                            position.y -= world_delta.y;
+                        }
+
+                        let selected = state.selected_node_paths.contains(current_path);
+
+                        if response.hovered() || selected {
+                            // display name above if hovered
+                            painter.debug_text(
+                                square.center_top() - egui::Vec2::new(0.0, 5.0),
+                                egui::Align2::CENTER_BOTTOM,
+                                egui::Color32::WHITE,
+                                name,
+                            );
+                        }
+
+                        if selected {
+                            painter.rect_filled(square, 0.0, SELECTION_HIGHLIGHT);
+                        }
                     }
                 }
             }

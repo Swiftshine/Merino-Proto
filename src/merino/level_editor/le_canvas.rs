@@ -17,7 +17,7 @@ impl LevelEditor {
             self.edit_all_nodes(ui, rect);
 
             // process inputs
-            self.handle_inputs(ui, &response);
+            self.handle_inputs(ui);
 
             // edit fields
             // can only edit the field of 1 selected object at a time

@@ -26,18 +26,12 @@ impl LevelEditor {
 
                         ui.separator();
 
-                        // constrain height to window size - some padding
-                        let max_height = ui.ctx().content_rect().height() - 50.0;
-
-                        egui::ScrollArea::vertical()
-                            .max_height(max_height)
-                            .auto_shrink([true; 2])
-                            .show(ui, |ui| match node.node_type {
-                                MapNodeType::MapObjSet => {
-                                    Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
-                                }
-                                _ => {}
-                            });
+                        match node.node_type {
+                            MapNodeType::MapObjSet => {
+                                Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
+                            }
+                            _ => {}
+                        }
                     });
             });
     }
