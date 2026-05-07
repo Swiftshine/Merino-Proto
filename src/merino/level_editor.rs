@@ -4,6 +4,8 @@ use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
 };
 
+use strum::{Display, EnumIter};
+
 mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
@@ -11,7 +13,7 @@ mod le_io;
 mod le_params;
 mod le_traits;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter, Display)]
 pub enum NodeChildType {
     MapPolySet,
     MapObjSet,
@@ -24,21 +26,21 @@ pub enum NodeChildType {
     MapTerrain,
 }
 
-impl NodeChildType {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::MapPolySet => "[MapPolySet]",
-            Self::MapObjSet => "[MapObjSet]",
-            Self::MapItemSet => "[MapItemSet]",
-            Self::MapEnemySet => "[MapEnemySet]",
-            Self::MapLocator => "[MapLocator]",
-            Self::MapPath => "[MapPath]",
-            Self::MapRect => "[MapRect]",
-            Self::MapCircle => "[MapCircle]",
-            Self::MapTerrain => "[MapTerrain]",
-        }
-    }
-}
+// impl NodeChildType {
+//     pub fn as_str(&self) -> &'static str {
+//         match self {
+//             Self::MapPolySet => "[MapPolySet]",
+//             Self::MapObjSet => "[MapObjSet]",
+//             Self::MapItemSet => "[MapItemSet]",
+//             Self::MapEnemySet => "[MapEnemySet]",
+//             Self::MapLocator => "[MapLocator]",
+//             Self::MapPath => "[MapPath]",
+//             Self::MapRect => "[MapRect]",
+//             Self::MapCircle => "[MapCircle]",
+//             Self::MapTerrain => "[MapTerrain]",
+//         }
+//     }
+// }
 
 // in order to keep track of which nodes are selected.
 // this is indicated in sequential traversal order

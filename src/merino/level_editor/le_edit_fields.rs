@@ -1,8 +1,10 @@
+use strum::IntoEnumIterator;
+
 use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapNodeType, NodeData},
     level_editor::{
-        LevelEditor, LevelEditorState, NodePath,
+        LevelEditor, LevelEditorState, NodeChildType, NodePath,
         le_traits::{EditInfo, Editable},
     },
 };
@@ -25,10 +27,10 @@ impl LevelEditor {
                     .inner_margin(egui::Vec2::splat(8.0))
                     .show(ui, |ui| {
                         let node_type_string = node.node_type.to_string();
-                        ui.label(format!("Edit node properties ({node_type_string})"));
+                        ui.label(format!("Edit node ({node_type_string})"));
 
                         ui.separator();
-
+                        ui.label(egui::RichText::new("Properties").strong());
                         egui::ScrollArea::vertical()
                             .max_height(400.0)
                             .show(ui, |ui| match node.node_type {
@@ -42,65 +44,83 @@ impl LevelEditor {
 
                         let has_children = node.has_children();
 
-                        if has_children {
-                            ui.separator();
-                            let resp = ui.collapsing("Children", |ui| {
-                                egui::ScrollArea::vertical()
-                                    .max_height(400.0)
-                                    .show(ui, |ui| {
-                                        for (branch, index, child) in node.all_children_mut() {
-                                            ui.horizontal(|ui| {
-                                                let label = format!("Child Index {}", index);
+                        ui.vertical(|ui|{
+                            ui.label(egui::RichText::new("Children").strong()).on_hover_text("Click on a child to go to it.");
+                            ui.add_space(4.0);
 
-                                                let hover_label = format!(
-                                                    "[{}] Index {}: {}",
-                                                    branch.as_str(),
-                                                    index,
-                                                    child.node_type
-                                                );
+                            if has_children {
+                                egui::Frame::new()
+                                    .fill(ui.visuals().faint_bg_color)
+                                    .corner_radius(4.0)
+                                    .inner_margin(4.0)
+                                    .show(ui, |ui|{
+                                        egui::ScrollArea::vertical()
+                                            .id_salt("node_children_scroll")
+                                            .max_height(300.0)
+                                            .auto_shrink([false, true])
+                                            .show(ui, |ui|{
+                                                for child_type in NodeChildType::iter() {
+                                                    // check if we have children of this category
+                                                    let children: Vec<_> = node
+                                                        .all_children_mut()
+                                                        .filter(|(branch, _, _)| *branch == child_type)
+                                                        .collect();
 
-                                                if ui
-                                                    .button(label)
-                                                    .on_hover_text(hover_label)
-                                                    .clicked()
-                                                {
-                                                    let mut new_path = node_path.clone();
-                                                    new_path.push((branch, index));
-                                                    child_to_select = Some(new_path);
+                                                    if children.is_empty() {
+                                                        continue;
+                                                    }
+
+                                                    // create subheader
+                                                    ui.label(child_type.to_string());
+
+                                                    ui.indent(ui.id().with(child_type), |ui| {
+                                                        for (branch, index, _) in children {
+                                                            ui.horizontal(|ui| {
+                                                                let label = format!("Index {}", index);
+
+                                                                if ui.button(label).clicked() {
+                                                                    let mut new_path = node_path.clone();
+                                                                    new_path.push((branch, index));
+                                                                    child_to_select = Some(new_path);
+
+                                                                    // todo! snap camera to that position
+                                                                }
+
+                                                                ui.with_layout(
+                                                                    egui::Layout::right_to_left(
+                                                                        egui::Align::Center,
+                                                                    ),
+                                                                    |ui| {
+                                                                        if ui
+                                                                            .button(ICON_DISCARD)
+                                                                            .on_hover_text("Delete Node")
+                                                                            .clicked()
+                                                                        {
+                                                                            let mut del_path = node_path.clone();
+                                                                            del_path.push((branch, index));
+                                                                            state.node_path_to_remove =
+                                                                                Some(del_path);
+                                                                        }
+                                                                    },
+                                                                );
+                                                            });
+                                                        }
+                                                    });
+                                                    ui.add_space(4.0);
                                                 }
 
-                                                // the delete button goes on the far right
-                                                ui.with_layout(
-                                                    egui::Layout::right_to_left(
-                                                        egui::Align::Center,
-                                                    ),
-                                                    |ui| {
-                                                        if ui
-                                                            .button(ICON_DISCARD)
-                                                            .on_hover_text("Delete Node")
-                                                            .clicked()
-                                                        {
-                                                            let mut del_path = node_path.clone();
-                                                            del_path.push((branch, index));
-                                                            state.node_path_to_remove =
-                                                                Some(del_path);
-                                                        }
-                                                    },
-                                                );
+                                                if let Some(path) = child_to_select {
+                                                    state.selected_node_paths.clear();
+                                                    state.selected_node_paths.push(path);
+                                                }
                                             });
-                                        }
-
-                                        if let Some(path) = child_to_select {
-                                            state.selected_node_paths.clear();
-                                            state.selected_node_paths.push(path);
-                                        }
                                     });
-                            });
-
-                            resp.header_response.on_hover_text("View child nodes.");
-                        } else {
-                            // todo! give option to add child
-                        }
+                            } else {
+                                // add children
+                                ui.label("No children. Add some?");
+                                ui.label("[TODO] set up addition/\"make child\" options");
+                            }
+                        });
                     });
             });
 
