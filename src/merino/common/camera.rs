@@ -23,13 +23,13 @@ impl CanvasCamera {
         let zoom_min = 0.5;
         let zoom_max = 100.0;
 
-        let is_mouse_over_canvas = ctx.input(|i| {
-            if let Some(pos) = i.pointer.hover_pos() {
-                i.content_rect().contains(pos)
-            } else {
-                false
-            }
-        });
+        let hover_pos = ctx.input(|i| i.pointer.hover_pos());
+        let is_mouse_over_canvas = if let Some(pos) = hover_pos {
+            let is_over_ui = ctx.is_pointer_over_area() || ctx.wants_pointer_input();
+            canvas_response.rect.contains(pos) && !is_over_ui
+        } else {
+            false
+        };
 
         // zoom handling
 
