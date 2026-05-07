@@ -5,7 +5,10 @@
 - [x] Level parsing
 - [ ] Level viewing
 - [ ] Level editing
-    - [ ] Parameter Parsing
+    - [x] Parameter Parsing
+    - [ ] object addition
+    - [ ] object removal
+    - [ ] handle sub-nodes
 - [x] Level saving
 
 ## Things to add in the final
