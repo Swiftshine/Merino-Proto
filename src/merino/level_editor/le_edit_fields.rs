@@ -1,4 +1,5 @@
 use crate::merino::{
+    common::emoji::*,
     game::mapbin::{MapNodeType, NodeData},
     level_editor::{
         LevelEditor, LevelEditorState, NodePath,
@@ -8,12 +9,14 @@ use crate::merino::{
 
 impl LevelEditor {
     pub fn edit_node_properties(&mut self, ui: &mut egui::Ui, node_path: NodePath) {
-        let node = match self.mapdata.get_node_at_path(node_path) {
+        let LevelEditor { mapdata, state, .. } = self;
+
+        let node = match mapdata.get_node_at_path(&node_path) {
             Some(n) => n,
             None => return,
         };
 
-        let state = &self.state;
+        let mut child_to_select = None;
 
         egui::Area::new(egui::Id::from("le_node_property_editor"))
             .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::new(-10.0, 10.0))
@@ -26,19 +29,133 @@ impl LevelEditor {
 
                         ui.separator();
 
-                        match node.node_type {
-                            MapNodeType::MapObjSet => {
-                                Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
-                            }
-                            _ => {}
+                        egui::ScrollArea::vertical()
+                            .max_height(400.0)
+                            .show(ui, |ui| match node.node_type {
+                                MapNodeType::MapObjSet => {
+                                    Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
+                                }
+                                _ => {}
+                            });
+
+                        // view children
+
+                        let has_children = node.has_children();
+
+                        if has_children {
+                            ui.separator();
+                            let resp = ui.collapsing("Children", |ui| {
+                                egui::ScrollArea::vertical()
+                                    .max_height(400.0)
+                                    .show(ui, |ui| {
+                                        for (branch, index, child) in node.all_children_mut() {
+                                            ui.horizontal(|ui| {
+                                                let label = format!("Child Index {}", index);
+
+                                                let hover_label = format!(
+                                                    "[{}] Index {}: {}",
+                                                    branch.as_str(),
+                                                    index,
+                                                    child.node_type
+                                                );
+
+                                                if ui
+                                                    .button(label)
+                                                    .on_hover_text(hover_label)
+                                                    .clicked()
+                                                {
+                                                    let mut new_path = node_path.clone();
+                                                    new_path.push((branch, index));
+                                                    child_to_select = Some(new_path);
+                                                }
+
+                                                // the delete button goes on the far right
+                                                ui.with_layout(
+                                                    egui::Layout::right_to_left(
+                                                        egui::Align::Center,
+                                                    ),
+                                                    |ui| {
+                                                        if ui
+                                                            .button(ICON_DISCARD)
+                                                            .on_hover_text("Delete Node")
+                                                            .clicked()
+                                                        {
+                                                            let mut del_path = node_path.clone();
+                                                            del_path.push((branch, index));
+                                                            state.node_path_to_remove =
+                                                                Some(del_path);
+                                                        }
+                                                    },
+                                                );
+                                            });
+                                        }
+
+                                        if let Some(path) = child_to_select {
+                                            state.selected_node_paths.clear();
+                                            state.selected_node_paths.push(path);
+                                        }
+                                    });
+                            });
+
+                            resp.header_response.on_hover_text("View child nodes.");
+                        } else {
+                            // todo! give option to add child
                         }
                     });
             });
+
+        if let Some(ref path) = state.node_path_to_remove {
+            let mut should_close = false;
+            let mut confirmed = false;
+
+            // check if the node being deleted has its own children
+            let has_sub_children = mapdata
+                .get_node_at_path(&path)
+                .map(|n| n.has_children())
+                .unwrap_or(false);
+
+            egui::Window::new("Confirm Deletion")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
+                .show(ui.ctx(), |ui| {
+                    if has_sub_children {
+                        // todo - make the warning togglable
+                        ui.colored_label(
+                            egui::Color32::LIGHT_RED,
+                            &format!("{ICON_WARNING} Warning: this node contains children."),
+                        );
+                        ui.label("Deleting it will remove all nested nodes.");
+                    } else {
+                        ui.label("Are you sure you want to delete this node?");
+                    }
+
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("Cancel").clicked() {
+                            should_close = true;
+                        }
+                        if ui.button("Delete").clicked() {
+                            confirmed = true;
+                            should_close = true;
+                        }
+                    });
+                });
+
+            if confirmed {
+                mapdata.remove_node_at_path(path);
+                state.selected_node_paths.retain(|p| p != path); // Clean up selection
+            }
+
+            if should_close {
+                state.node_path_to_remove = None;
+            }
+        }
     }
 
     fn edit_mapobjset_properties(
         ui: &mut egui::Ui,
-        state: &LevelEditorState,
+        state: &mut LevelEditorState,
         node_data: &mut NodeData,
     ) {
         if let NodeData::MapObjSet {

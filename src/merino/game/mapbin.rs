@@ -194,15 +194,15 @@ pub enum NodeData {
 pub struct MapDataNode {
     pub node_type: MapNodeType,
     pub node_data: NodeData,
-    pub sub1: Option<Vec<MapDataNode>>,
-    pub sub2: Option<Vec<MapDataNode>>,
-    pub sub4: Option<Vec<MapDataNode>>,
-    pub sub8: Option<Vec<MapDataNode>>,
-    pub sub10: Option<Vec<MapDataNode>>,
-    pub sub20: Option<Vec<MapDataNode>>,
-    pub sub40: Option<Vec<MapDataNode>>,
-    pub sub80: Option<Vec<MapDataNode>>,
-    pub sub100: Option<Vec<MapDataNode>>,
+    pub sub1: Option<Vec<MapDataNode>>,   // MapPolySet
+    pub sub2: Option<Vec<MapDataNode>>,   // MapObjSet
+    pub sub4: Option<Vec<MapDataNode>>,   // MapItemSet
+    pub sub8: Option<Vec<MapDataNode>>,   // MapEnemySet
+    pub sub10: Option<Vec<MapDataNode>>,  // MapLocator
+    pub sub20: Option<Vec<MapDataNode>>,  // MapPath
+    pub sub40: Option<Vec<MapDataNode>>,  // MapRect
+    pub sub80: Option<Vec<MapDataNode>>,  // MapCircle
+    pub sub100: Option<Vec<MapDataNode>>, // MapTerrain
 }
 
 impl MapDataNode {
@@ -309,6 +309,10 @@ impl MapDataNode {
 
         items.into_iter()
     }
+
+    pub fn has_children(&self) -> bool {
+        self.available_children().next().is_some()
+    }
 }
 
 #[derive(Default)]
@@ -333,7 +337,7 @@ impl Mapbin {
         );
     }
 
-    pub fn get_node_at_path(&mut self, path: NodePath) -> Option<&mut MapDataNode> {
+    pub fn get_node_at_path(&mut self, path: &NodePath) -> Option<&mut MapDataNode> {
         let mut current = &mut self.root;
 
         for (branch, index) in path {
@@ -349,9 +353,40 @@ impl Mapbin {
                 NodeBranch::Sub100 => &mut current.sub100,
             };
 
-            current = vec.as_mut()?.get_mut(index)?;
+            current = vec.as_mut()?.get_mut(*index)?;
         }
 
         Some(current)
+    }
+
+    pub fn remove_node_at_path(&mut self, path: &NodePath) -> Option<MapDataNode> {
+        if path.is_empty() {
+            return None;
+        }
+
+        let mut parent_path = path.clone();
+        let (branch, index) = parent_path.pop()?;
+
+        // get the parent of the node we want to kill
+        let parent = self.get_node_at_path(&parent_path)?;
+
+        let vec = match branch {
+            NodeBranch::Sub1 => &mut parent.sub1,
+            NodeBranch::Sub2 => &mut parent.sub2,
+            NodeBranch::Sub4 => &mut parent.sub4,
+            NodeBranch::Sub8 => &mut parent.sub8,
+            NodeBranch::Sub10 => &mut parent.sub10,
+            NodeBranch::Sub20 => &mut parent.sub20,
+            NodeBranch::Sub40 => &mut parent.sub40,
+            NodeBranch::Sub80 => &mut parent.sub80,
+            NodeBranch::Sub100 => &mut parent.sub100,
+        };
+
+        if let Some(v) = vec {
+            if index < v.len() {
+                return Some(v.remove(index));
+            }
+        }
+        None
     }
 }

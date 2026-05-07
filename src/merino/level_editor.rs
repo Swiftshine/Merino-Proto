@@ -24,6 +24,22 @@ pub enum NodeBranch {
     Sub100,
 }
 
+impl NodeBranch {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Sub1 => "[MapPolySet]",
+            Self::Sub2 => "[MapObjSet]",
+            Self::Sub4 => "[MapItemSet]",
+            Self::Sub8 => "[MapEnemySet]",
+            Self::Sub10 => "[MapLocator]",
+            Self::Sub20 => "[MapPath]",
+            Self::Sub40 => "[MapRect]",
+            Self::Sub80 => "[MapCircle]",
+            Self::Sub100 => "[MapTerrain]",
+        }
+    }
+}
+
 // in order to keep track of which nodes are selected.
 // this is indicated in sequential traversal order
 // e.g. [[Sub1, 0], [Sub2, 0], [Sub4, 1]] would be:
@@ -34,6 +50,7 @@ pub type NodePath = Vec<(NodeBranch, usize)>;
 pub struct LevelEditorState {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
+    pub node_path_to_remove: Option<NodePath>,
     pub parameter_objects: Vec<ParameterObject>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
