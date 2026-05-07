@@ -109,7 +109,7 @@ impl<const N: usize> Editable for Params<N> {
         if let Some(EditInfo::Params(param_object)) = info {
             ui.collapsing("Parameters", |ui| {
                 for param in param_object.parameters.iter() {
-                    ui.collapsing(&param.name, |ui| {
+                    let resp = ui.collapsing(&param.name, |ui| {
                         if let Some(desc) = &param.description
                             && !desc.is_empty()
                         {
@@ -171,6 +171,12 @@ impl<const N: usize> Editable for Params<N> {
                             _ => {}
                         }
                     });
+
+                    if let Some(note) = &param.note
+                        && !note.is_empty()
+                    {
+                        resp.header_response.on_hover_text(note);
+                    }
                 }
             });
         }
