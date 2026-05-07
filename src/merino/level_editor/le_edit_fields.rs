@@ -57,6 +57,8 @@ impl LevelEditor {
             unk14,
         } = node_data
         {
+            // todo!() search for display name and do that
+
             name.edit_properties(ui, EditInfo::label("Name"));
             position.edit_properties(ui, EditInfo::label("Position"));
             unk3.edit_properties(ui, EditInfo::label("Unk 3"));
