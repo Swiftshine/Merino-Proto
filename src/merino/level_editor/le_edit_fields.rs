@@ -26,109 +26,107 @@ impl LevelEditor {
 
         let mut child_to_select = None;
 
-        egui::Area::new(egui::Id::from("le_node_property_editor"))
-            .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::new(-10.0, 10.0))
-            .show(ui.ctx(), |ui| {
-                egui::Frame::popup(ui.style())
-                    .inner_margin(egui::Vec2::splat(8.0))
-                    .show(ui, |ui| {
-                        let node_type_string = node.node_type.to_string();
-                        ui.label(format!("Edit node ({node_type_string})"));
+        let node_type_string = node.node_type.to_string();
+        ui.label(format!("Edit node ({node_type_string})"));
 
-                        ui.separator();
-                        ui.label(egui::RichText::new("Properties").strong());
-                        egui::ScrollArea::vertical()
-                            .max_height(400.0)
-                            .show(ui, |ui| match node.node_type {
-                                MapNodeType::MapObjSet => {
-                                    Self::edit_mapobjset_properties(ui, object_property_editor_context, &mut node.node_data);
-                                }
-                                _ => {}
-                            });
-
-                        // view children
-
-                        let has_children = node.has_children();
-
-                        ui.vertical(|ui|{
-                            ui.label(egui::RichText::new("Children").strong()).on_hover_text("Click on a child to go to it.");
-                            ui.add_space(4.0);
-
-                            if has_children {
-                                egui::Frame::new()
-                                    .fill(ui.visuals().faint_bg_color)
-                                    .corner_radius(4.0)
-                                    .inner_margin(4.0)
-                                    .show(ui, |ui|{
-                                        egui::ScrollArea::vertical()
-                                            .id_salt("node_children_scroll")
-                                            .max_height(300.0)
-                                            .auto_shrink([false, true])
-                                            .show(ui, |ui|{
-                                                for child_type in NodeChildType::iter() {
-                                                    // check if we have children of this category
-                                                    let children: Vec<_> = node
-                                                        .all_children_mut()
-                                                        .filter(|(branch, _, _)| *branch == child_type)
-                                                        .collect();
-
-                                                    if children.is_empty() {
-                                                        continue;
-                                                    }
-
-                                                    // create subheader
-                                                    ui.label(child_type.to_string());
-
-                                                    ui.indent(ui.id().with(child_type), |ui| {
-                                                        for (branch, index, _) in children {
-                                                            ui.horizontal(|ui| {
-                                                                let label = format!("Index {}", index);
-
-                                                                if ui.button(label).clicked() {
-                                                                    let mut new_path = node_path.clone();
-                                                                    new_path.push((branch, index));
-                                                                    child_to_select = Some(new_path);
-
-                                                                    // todo! snap camera to that position
-                                                                }
-
-                                                                ui.with_layout(
-                                                                    egui::Layout::right_to_left(
-                                                                        egui::Align::Center,
-                                                                    ),
-                                                                    |ui| {
-                                                                        if ui
-                                                                            .button(ICON_DISCARD)
-                                                                            .on_hover_text("Delete Node")
-                                                                            .clicked()
-                                                                        {
-                                                                            let mut del_path = node_path.clone();
-                                                                            del_path.push((branch, index));
-                                                                            object_property_editor_context.node_path_to_remove =
-                                                                                Some(del_path);
-                                                                        }
-                                                                    },
-                                                                );
-                                                            });
-                                                        }
-                                                    });
-                                                    ui.add_space(4.0);
-                                                }
-
-                                                if let Some(path) = child_to_select {
-                                                    canvas_context.selected_node_paths.clear();
-                                                    canvas_context.selected_node_paths.push(path);
-                                                }
-                                            });
-                                    });
-                            } else {
-                                // add children
-                                ui.label("No children. Add some?");
-                                ui.label("[TODO] set up addition/\"make child\" options");
-                            }
-                        });
-                    });
+        ui.separator();
+        ui.label(egui::RichText::new("Properties").strong());
+        egui::ScrollArea::vertical()
+            .max_height(400.0)
+            .show(ui, |ui| match node.node_type {
+                MapNodeType::MapObjSet => {
+                    Self::edit_mapobjset_properties(
+                        ui,
+                        object_property_editor_context,
+                        &mut node.node_data,
+                    );
+                }
+                _ => {}
             });
+
+        // view children
+
+        let has_children = node.has_children();
+
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Children").strong())
+                .on_hover_text("Click on a child to go to it.");
+            ui.add_space(4.0);
+
+            if has_children {
+                egui::Frame::new()
+                    .fill(ui.visuals().faint_bg_color)
+                    .corner_radius(4.0)
+                    .inner_margin(4.0)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical()
+                            .id_salt("node_children_scroll")
+                            .max_height(300.0)
+                            .auto_shrink([false, true])
+                            .show(ui, |ui| {
+                                for child_type in NodeChildType::iter() {
+                                    // check if we have children of this category
+                                    let children: Vec<_> = node
+                                        .all_children_mut()
+                                        .filter(|(branch, _, _)| *branch == child_type)
+                                        .collect();
+
+                                    if children.is_empty() {
+                                        continue;
+                                    }
+
+                                    // create subheader
+                                    ui.label(child_type.to_string());
+
+                                    ui.indent(ui.id().with(child_type), |ui| {
+                                        for (branch, index, _) in children {
+                                            ui.horizontal(|ui| {
+                                                let label = format!("Index {}", index);
+
+                                                if ui.button(label).clicked() {
+                                                    let mut new_path = node_path.clone();
+                                                    new_path.push((branch, index));
+                                                    child_to_select = Some(new_path);
+
+                                                    // todo! snap camera to that position
+                                                }
+
+                                                ui.with_layout(
+                                                    egui::Layout::right_to_left(
+                                                        egui::Align::Center,
+                                                    ),
+                                                    |ui| {
+                                                        if ui
+                                                            .button(ICON_DISCARD)
+                                                            .on_hover_text("Delete Node")
+                                                            .clicked()
+                                                        {
+                                                            let mut del_path = node_path.clone();
+                                                            del_path.push((branch, index));
+                                                            object_property_editor_context
+                                                                .node_path_to_remove =
+                                                                Some(del_path);
+                                                        }
+                                                    },
+                                                );
+                                            });
+                                        }
+                                    });
+                                    ui.add_space(4.0);
+                                }
+
+                                if let Some(path) = child_to_select {
+                                    canvas_context.selected_node_paths.clear();
+                                    canvas_context.selected_node_paths.push(path);
+                                }
+                            });
+                    });
+            } else {
+                // add children
+                ui.label("No children. Add some?");
+                ui.label("[TODO] set up addition/\"make child\" options");
+            }
+        });
 
         if let Some(ref path) = object_property_editor_context.node_path_to_remove {
             let mut should_close = false;

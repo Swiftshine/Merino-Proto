@@ -81,19 +81,75 @@ pub struct ObjectPropertyEditorContext {
 //     }
 // }
 
-#[derive(Default)]
+pub enum Tab {
+    Canvas,
+    ObjectProperties,
+}
+
+struct TabViewer<'a> {
+    editor: &'a mut LevelEditor,
+}
+
+impl<'a> egui_dock::TabViewer for TabViewer<'a> {
+    type Tab = Tab;
+
+    fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
+        match tab {
+            Tab::Canvas => "Canvas",
+            Tab::ObjectProperties => "Object Properties",
+        }
+        .into()
+    }
+
+    fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
+        match tab {
+            Tab::Canvas => {
+                if self.editor.io_context.file_open {
+                    self.editor.show_canvas(ui);
+                } else {
+                    ui.centered_and_justified(|ui| ui.label("No file open."));
+                }
+            }
+
+            Tab::ObjectProperties => {
+                if self.editor.canvas_context.selected_node_paths.len() == 1 {
+                    let node_path = self.editor.canvas_context.selected_node_paths[0].clone();
+                    self.editor.edit_node_properties(ui, node_path);
+                } else {
+                    ui.centered_and_justified(|ui| ui.label("Select exactly one object to edit."));
+                }
+            }
+        }
+    }
+}
+
 pub struct LevelEditor {
     // contexts
     pub io_context: IOContext,
     pub file_context: FileContext,
     pub canvas_context: CanvasContext,
     pub object_property_editor_context: ObjectPropertyEditorContext,
+
+    pub dock_state: egui_dock::DockState<Tab>,
 }
 
 impl LevelEditor {
     pub fn new() -> Self {
+        let mut dock_state = egui_dock::DockState::new(vec![Tab::Canvas]);
+
+        // split window, properties on the right by default
+        let [_canvas_node, _properties_node] = dock_state.main_surface_mut().split_right(
+            egui_dock::NodeIndex::root(),
+            0.8, // 80% canvas, 20% properties,
+            vec![Tab::ObjectProperties],
+        );
+
         Self {
-            ..Default::default()
+            io_context: Default::default(),
+            file_context: Default::default(),
+            canvas_context: Default::default(),
+            object_property_editor_context: Default::default(),
+            dock_state,
         }
     }
 
@@ -123,11 +179,23 @@ impl LevelEditor {
         });
 
         // canvas
-        egui::CentralPanel::default().show(ui.ctx(), |ui| {
-            if self.io_context.file_open {
-                self.show_canvas(ui);
-            }
-        });
+
+        // temporarily move dock_state to avoid borrowing &mut self twice
+        let mut dock_state =
+            std::mem::replace(&mut self.dock_state, egui_dock::DockState::new(vec![]));
+
+        egui_dock::DockArea::new(&mut dock_state)
+            .style(egui_dock::Style::from_egui(ui.style()))
+            .show(ui.ctx(), &mut TabViewer { editor: self });
+
+        // then put it back
+        self.dock_state = dock_state;
+
+        // egui::CentralPanel::default().show(ui.ctx(), |ui| {
+        //     if self.io_context.file_open {
+        //         self.show_canvas(ui);
+        //     }
+        // });
     }
 
     pub fn handle_inputs(&mut self, ui: &mut egui::Ui) {
