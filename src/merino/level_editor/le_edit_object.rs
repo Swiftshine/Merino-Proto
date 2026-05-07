@@ -1,6 +1,6 @@
 use crate::merino::{
     game::mapbin::{MapDataNode, MapNodeType, NodeData, Vec2f},
-    level_editor::{LevelEditor, LevelEditorState, NodePath},
+    level_editor::{CanvasContext, LevelEditor, NodePath},
 };
 
 const SQUARE_SIZE: f32 = 2.0;
@@ -14,48 +14,49 @@ const SELECTION_HIGHLIGHT: egui::Color32 =
 impl LevelEditor {
     pub fn edit_all_nodes(&mut self, ui: &mut egui::Ui, canvas_rect: egui::Rect) {
         let mut path = Vec::new();
-        self.mapdata
+        self.file_context
+            .mapdata
             .root
-            .edit(&mut self.state, ui, canvas_rect, &mut path);
+            .edit(&mut self.canvas_context, ui, canvas_rect, &mut path);
     }
 }
 
 impl MapDataNode {
     fn edit(
         &mut self,
-        state: &mut LevelEditorState,
+        context: &mut CanvasContext,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
     ) {
         match self.node_type {
             // MapNodeType::MapSet => {
-            //     self.edit_mapset(state, ui, canvas_rect, current_path);
+            //     self.edit_mapset(context, ui, canvas_rect, current_path);
             // }
             MapNodeType::MapPolySet => {
-                self.edit_mappolyset(state, ui, canvas_rect, current_path);
+                self.edit_mappolyset(context, ui, canvas_rect, current_path);
             }
 
             MapNodeType::MapObjSet => {
-                self.edit_mapobjset(state, ui, canvas_rect, current_path);
+                self.edit_mapobjset(context, ui, canvas_rect, current_path);
             }
 
             MapNodeType::MapLocator => {
-                self.edit_maplocator(state, ui, canvas_rect, current_path);
+                self.edit_maplocator(context, ui, canvas_rect, current_path);
             }
             _ => {}
         }
 
         for (branch, index, child) in self.all_children_mut() {
             current_path.push((branch, index));
-            child.edit(state, ui, canvas_rect, current_path);
+            child.edit(context, ui, canvas_rect, current_path);
             current_path.pop();
         }
     }
 
     // fn edit_mapset(
     //     &mut self,
-    //     state: &mut LevelEditorState,
+    //     context: &mut CanvasContext,
     //     ui: &mut egui::Ui,
     //     canvas_rect: egui::Rect,
     //     current_path: &mut NodePath,
@@ -72,8 +73,8 @@ impl MapDataNode {
     //     let painter = ui.painter_at(canvas_rect);
 
     //     // draw bounds
-    //     let start = canvas_rect.min + state.camera.convert_to_camera(bounds_start.into());
-    //     let end = canvas_rect.min + state.camera.convert_to_camera(bounds_end.into());
+    //     let start = canvas_rect.min + context.camera.convert_to_camera(bounds_start.into());
+    //     let end = canvas_rect.min + context.camera.convert_to_camera(bounds_end.into());
 
     //     let square = egui::Rect::from_points(&[start, end]);
 
@@ -92,9 +93,9 @@ impl MapDataNode {
 
     //     if square_response.clicked_by(egui::PointerButton::Primary) {
     //         // selected, add to selected object indices
-    //         state.selected_node_paths.push(current_path.clone());
+    //         context.selected_node_paths.push(current_path.clone());
     //     } else if square_response.dragged_by(egui::PointerButton::Primary) {
-    //         let world_delta = square_response.drag_delta() / state.camera.zoom;
+    //         let world_delta = square_response.drag_delta() / context.camera.zoom;
 
     //         bounds_start.x += world_delta.x;
     //         bounds_start.y -= world_delta.y;
@@ -102,7 +103,7 @@ impl MapDataNode {
     //         bounds_end.y -= world_delta.y;
     //     }
 
-    //     let selected = state.selected_node_paths.contains(&current_path);
+    //     let selected = context.selected_node_paths.contains(&current_path);
 
     //     if selected {
     //         painter.rect_filled(square, 0.0, SELECTION_HIGHLIGHT);
@@ -111,7 +112,7 @@ impl MapDataNode {
 
     fn edit_mappolyset(
         &mut self,
-        state: &mut LevelEditorState,
+        context: &mut CanvasContext,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         _current_path: &mut NodePath,
@@ -122,8 +123,8 @@ impl MapDataNode {
 
         let painter = ui.painter_at(canvas_rect);
 
-        let draw_start = canvas_rect.min + state.camera.convert_to_camera(start.into());
-        let draw_end = canvas_rect.min + state.camera.convert_to_camera(end.into());
+        let draw_start = canvas_rect.min + context.camera.convert_to_camera(start.into());
+        let draw_end = canvas_rect.min + context.camera.convert_to_camera(end.into());
 
         painter.line_segment(
             [draw_start, draw_end],
@@ -133,7 +134,7 @@ impl MapDataNode {
 
     fn edit_mapobjset(
         &mut self,
-        state: &mut LevelEditorState,
+        context: &mut CanvasContext,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
@@ -143,20 +144,20 @@ impl MapDataNode {
         };
 
         // check if we should process this at all
-        if !(state.display_dummy_terrain || name.as_str() != "dummy_terrain") {
+        if !(context.display_dummy_terrain || name.as_str() != "dummy_terrain") {
             return;
         }
 
         let painter = ui.painter_at(canvas_rect);
 
         let screen_pos = canvas_rect.min
-            + state
+            + context
                 .camera
                 .convert_to_camera(Vec2f::from(*position).into());
 
         let square = egui::Rect::from_center_size(
             egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SQUARE_SIZE * state.camera.zoom),
+            egui::Vec2::splat(SQUARE_SIZE * context.camera.zoom),
         );
 
         let response = ui.interact(
@@ -173,14 +174,14 @@ impl MapDataNode {
         );
 
         if response.clicked_by(egui::PointerButton::Primary) {
-            state.selected_node_paths.push(current_path.clone());
+            context.selected_node_paths.push(current_path.clone());
         } else if response.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = response.drag_delta() / state.camera.zoom;
+            let world_delta = response.drag_delta() / context.camera.zoom;
             position.x += world_delta.x;
             position.y -= world_delta.y;
         }
 
-        let selected = state.selected_node_paths.contains(current_path);
+        let selected = context.selected_node_paths.contains(current_path);
 
         if response.hovered() || selected {
             // display name above if hovered
@@ -199,7 +200,7 @@ impl MapDataNode {
 
     fn edit_maplocator(
         &mut self,
-        state: &mut LevelEditorState,
+        context: &mut CanvasContext,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
@@ -211,13 +212,13 @@ impl MapDataNode {
         let painter = ui.painter_at(canvas_rect);
 
         let screen_pos = canvas_rect.min
-            + state
+            + context
                 .camera
                 .convert_to_camera(Vec2f::from(*position).into());
 
         let square = egui::Rect::from_center_size(
             egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SQUARE_SIZE * state.camera.zoom),
+            egui::Vec2::splat(SQUARE_SIZE * context.camera.zoom),
         );
 
         let response = ui.interact(
@@ -234,14 +235,14 @@ impl MapDataNode {
         );
 
         if response.clicked_by(egui::PointerButton::Primary) {
-            state.selected_node_paths.push(current_path.clone());
+            context.selected_node_paths.push(current_path.clone());
         } else if response.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = response.drag_delta() / state.camera.zoom;
+            let world_delta = response.drag_delta() / context.camera.zoom;
             position.x += world_delta.x;
             position.y -= world_delta.y;
         }
 
-        let selected = state.selected_node_paths.contains(current_path);
+        let selected = context.selected_node_paths.contains(current_path);
 
         if response.hovered() || selected {
             // display name above if hovered

@@ -4,15 +4,21 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapNodeType, NodeData},
     level_editor::{
-        LevelEditor, LevelEditorState, NodeChildType, NodePath,
+        LevelEditor, NodeChildType, NodePath, ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
 };
 
 impl LevelEditor {
     pub fn edit_node_properties(&mut self, ui: &mut egui::Ui, node_path: NodePath) {
-        let LevelEditor { mapdata, state, .. } = self;
+        let LevelEditor {
+            file_context,
+            object_property_editor_context,
+            canvas_context,
+            ..
+        } = self;
 
+        let mapdata = &mut file_context.mapdata;
         let node = match mapdata.get_node_at_path(&node_path) {
             Some(n) => n,
             None => return,
@@ -35,7 +41,7 @@ impl LevelEditor {
                             .max_height(400.0)
                             .show(ui, |ui| match node.node_type {
                                 MapNodeType::MapObjSet => {
-                                    Self::edit_mapobjset_properties(ui, state, &mut node.node_data);
+                                    Self::edit_mapobjset_properties(ui, object_property_editor_context, &mut node.node_data);
                                 }
                                 _ => {}
                             });
@@ -98,7 +104,7 @@ impl LevelEditor {
                                                                         {
                                                                             let mut del_path = node_path.clone();
                                                                             del_path.push((branch, index));
-                                                                            state.node_path_to_remove =
+                                                                            object_property_editor_context.node_path_to_remove =
                                                                                 Some(del_path);
                                                                         }
                                                                     },
@@ -110,8 +116,8 @@ impl LevelEditor {
                                                 }
 
                                                 if let Some(path) = child_to_select {
-                                                    state.selected_node_paths.clear();
-                                                    state.selected_node_paths.push(path);
+                                                    canvas_context.selected_node_paths.clear();
+                                                    canvas_context.selected_node_paths.push(path);
                                                 }
                                             });
                                     });
@@ -124,7 +130,7 @@ impl LevelEditor {
                     });
             });
 
-        if let Some(ref path) = state.node_path_to_remove {
+        if let Some(ref path) = object_property_editor_context.node_path_to_remove {
             let mut should_close = false;
             let mut confirmed = false;
 
@@ -164,18 +170,18 @@ impl LevelEditor {
 
             if confirmed {
                 mapdata.remove_node_at_path(path);
-                state.selected_node_paths.retain(|p| p != path); // Clean up selection
+                canvas_context.selected_node_paths.retain(|p| p != path); // Clean up selection
             }
 
             if should_close {
-                state.node_path_to_remove = None;
+                object_property_editor_context.node_path_to_remove = None;
             }
         }
     }
 
     fn edit_mapobjset_properties(
         ui: &mut egui::Ui,
-        state: &mut LevelEditorState,
+        context: &mut ObjectPropertyEditorContext,
         node_data: &mut NodeData,
     ) {
         if let NodeData::MapObjSet {
@@ -216,7 +222,7 @@ impl LevelEditor {
             params.edit_properties(
                 ui,
                 EditInfo::search_param(
-                    &state.parameter_objects,
+                    &context.parameter_objects,
                     MapNodeType::MapObjSet,
                     name.as_str(),
                 ),

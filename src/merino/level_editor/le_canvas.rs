@@ -8,7 +8,7 @@ impl LevelEditor {
                 ui.allocate_exact_size(desired_canvas_size, egui::Sense::click_and_drag());
 
             // update camera
-            self.state.camera.update(ui.ctx(), &response);
+            self.canvas_context.camera.update(ui.ctx(), &response);
 
             let painter = ui.painter_at(rect);
             painter.rect_filled(rect, 0.0, egui::Color32::BLACK);
@@ -21,8 +21,8 @@ impl LevelEditor {
 
             // edit fields
             // can only edit the field of 1 selected object at a time
-            if self.state.selected_node_paths.len() == 1 {
-                let path = self.state.selected_node_paths[0].clone();
+            if self.canvas_context.selected_node_paths.len() == 1 {
+                let path = self.canvas_context.selected_node_paths[0].clone();
                 self.edit_node_properties(ui, path);
             }
         });

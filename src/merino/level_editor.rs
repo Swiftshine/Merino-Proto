@@ -49,16 +49,31 @@ pub enum NodeChildType {
 pub type NodePath = Vec<(NodeChildType, usize)>;
 
 #[derive(Default)]
-pub struct LevelEditorState {
+pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
-    pub node_path_to_remove: Option<NodePath>,
-    pub parameter_objects: Vec<ParameterObject>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
 }
 
-// impl LevelEditorState {
+#[derive(Default)]
+pub struct IOContext {
+    pub file_open: bool,
+    pub file_path: Option<PathBuf>,
+}
+
+#[derive(Default)]
+pub struct FileContext {
+    pub mapdata: Mapbin,
+}
+
+#[derive(Default)]
+pub struct ObjectPropertyEditorContext {
+    pub node_path_to_remove: Option<NodePath>,
+    pub parameter_objects: Vec<ParameterObject>,
+}
+
+// impl ObjectPropertyEditorContext {
 //     pub fn get_param_object(&self, node_type: MapNodeType, name: &str) -> Option<&ParameterObject> {
 //         self.parameter_objects
 //             .iter()
@@ -66,25 +81,19 @@ pub struct LevelEditorState {
 //     }
 // }
 
+#[derive(Default)]
 pub struct LevelEditor {
-    // i/o
-    file_open: bool,
-    file_path: Option<PathBuf>,
-
-    // files
-    mapdata: Mapbin,
-
-    // state
-    pub state: LevelEditorState,
+    // contexts
+    pub io_context: IOContext,
+    pub file_context: FileContext,
+    pub canvas_context: CanvasContext,
+    pub object_property_editor_context: ObjectPropertyEditorContext,
 }
 
 impl LevelEditor {
     pub fn new() -> Self {
         Self {
-            file_open: false,
-            file_path: None,
-            mapdata: Mapbin::default(),
-            state: LevelEditorState::default(),
+            ..Default::default()
         }
     }
 
@@ -99,7 +108,7 @@ impl LevelEditor {
 
                 if ui
                     .add_enabled(
-                        self.file_open && self.file_path.is_some(),
+                        self.io_context.file_open && self.io_context.file_path.is_some(),
                         egui::Button::new("Save As"),
                     )
                     .clicked()
@@ -115,7 +124,7 @@ impl LevelEditor {
 
         // canvas
         egui::CentralPanel::default().show(ui.ctx(), |ui| {
-            if self.file_open {
+            if self.io_context.file_open {
                 self.show_canvas(ui);
             }
         });
@@ -128,18 +137,20 @@ impl LevelEditor {
         if secondary_down {
             let delta = ui.input(|i| i.pointer.delta());
             if delta != egui::Vec2::ZERO {
-                self.state.camera.pan(delta / self.state.camera.zoom);
+                self.canvas_context
+                    .camera
+                    .pan(delta / self.canvas_context.camera.zoom);
             }
         }
 
         // pan reset handling
         if secondary_down && ui.input(|i| i.key_pressed(egui::Key::R)) {
-            self.state.camera.reset();
+            self.canvas_context.camera.reset();
         }
 
         // clear selections
         if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
-            self.state.selected_node_paths.clear();
+            self.canvas_context.selected_node_paths.clear();
         }
     }
 }

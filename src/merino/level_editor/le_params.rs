@@ -141,7 +141,7 @@ impl LevelEditor {
             parameter_objects.extend(objects);
         }
 
-        self.state.parameter_objects = parameter_objects;
+        self.object_property_editor_context.parameter_objects = parameter_objects;
         Ok(())
     }
 }

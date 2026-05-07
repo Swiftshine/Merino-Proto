@@ -19,13 +19,13 @@ impl LevelEditor {
             .add_filter("Level File", &["mapbin"])
             .pick_file()
         {
-            self.file_path = Some(path);
-            let path = self.file_path.as_ref().unwrap();
+            self.io_context.file_path = Some(path);
+            let path = self.io_context.file_path.as_ref().unwrap();
             let data = fs::read(path)?;
 
-            self.mapdata = read_level(&data)?;
+            self.file_context.mapdata = read_level(&data)?;
 
-            self.file_open = true;
+            self.io_context.file_open = true;
         }
 
         Ok(())
@@ -39,7 +39,7 @@ impl LevelEditor {
             // collect any brand new strings
             self.collect_new_strings();
             // then write the data
-            let data = write_level(&self.mapdata)?;
+            let data = write_level(&self.file_context.mapdata)?;
             fs::write(path, data)?;
         }
         Ok(())
@@ -48,7 +48,7 @@ impl LevelEditor {
     fn collect_new_strings(&mut self) {
         // go through every item, check if the string already exists,
         // and add it to the appropriate vec if not
-        self.mapdata.collect_new_strings();
+        self.file_context.mapdata.collect_new_strings();
     }
 
     /// Loads `objectdata.json`
