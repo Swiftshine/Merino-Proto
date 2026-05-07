@@ -236,42 +236,42 @@ struct MapSetNode {
     }
 
 
-    u32 mFlags;
+    u32 mChildFlags;
 
-    if ((mFlags & 1) != 0) {
-        VarArray<MapSetNode> sub1;
+    if ((mChildFlags & 1) != 0) {
+        VarArray<MapSetNode> mChildren_MapPolySet;
     }
 
-    if ((mFlags & 2) != 0) {
-        VarArray<MapSetNode> sub2;
+    if ((mChildFlags & 2) != 0) {
+        VarArray<MapSetNode> mChildren_MapObjSet;
     }
 
-    if ((mFlags & 4) != 0) {
-        VarArray<MapSetNode> sub4;
+    if ((mChildFlags & 4) != 0) {
+        VarArray<MapSetNode> mChildren_MapItemSet;
     }
 
-    if ((mFlags & 8) != 0) {
-        VarArray<MapSetNode> sub8;
+    if ((mChildFlags & 8) != 0) {
+        VarArray<MapSetNode> mChildren_MapEnemySet;
     }
 
-    if ((mFlags & 0x10) != 0) {
-        VarArray<MapSetNode> sub10;
+    if ((mChildFlags & 0x10) != 0) {
+        VarArray<MapSetNode> mChildren_MapLocator;
     }
 
-    if ((mFlags & 0x20) != 0) {
-        VarArray<MapSetNode> sub20;
+    if ((mChildFlags & 0x20) != 0) {
+        VarArray<MapSetNode> mChildren_MapPath;
     }
 
-    if ((mFlags & 0x40) != 0) {
-        VarArray<MapSetNode> sub40;
+    if ((mChildFlags & 0x40) != 0) {
+        VarArray<MapSetNode> mChildren_MapRect;
     }
 
-    if ((mFlags & 0x80) != 0) {
-        VarArray<MapSetNode> sub80;
+    if ((mChildFlags & 0x80) != 0) {
+        VarArray<MapSetNode> mChildren_MapCircle;
     }
 
-    if ((mFlags & 0x100) != 0) {
-        VarArray<MapSetNode> sub100;
+    if ((mChildFlags & 0x100) != 0) {
+        VarArray<MapSetNode> mChildren_MapTerrain;
     }
 };
 
