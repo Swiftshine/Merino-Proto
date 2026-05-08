@@ -1,8 +1,9 @@
 use crate::merino::level_editor::{NodeChildType, NodePath};
+use enum_map::Enum;
 use std::fmt::Display;
 use strum::{AsRefStr, Display, EnumString, FromRepr};
 
-#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone, EnumString, PartialEq)]
+#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone, EnumString, PartialEq, Enum)]
 #[repr(u32)]
 pub enum MapNodeType {
     #[default]

@@ -14,7 +14,7 @@
     - [ ] MapRect
     - [ ] MapCircle
     - [ ] MapTerrain
-    - [ ] toggles for all of the above
+    - [x] toggles for all of the above
 - [ ] Level editing
     - [ ] MapSet
     - [ ] MapPolySet
@@ -26,7 +26,7 @@
     - [ ] MapRect
     - [ ] MapCircle
     - [ ] MapTerrain
-    - [ ] toggles for all of the above
+    - [x] toggles for all of the above
     - [x] handle sub-nodes
         - [x] add
         - [x] remove
@@ -47,3 +47,16 @@
 - [x] docking
 - [ ] node tree
 - [ ] download objectdata
+- [ ] creating new files
+    - this would require a number of different fields for file version (we could just hardcode it to latest)
+    - note: no need to allow the user to add a `MapSet` because it could just be pre-inited
+
+## General code cleanliness for rewrite
+
+- don't access struct members directly, use functions
+- separate large functions
+- give functions more uniform names
+    - e.g. `show_` for ui methods, `process_` for stuff that happens in the background, etc.
+- get rid of redundant functionality
+- use functions to generate enum variants
+- separate tabs into separate folders

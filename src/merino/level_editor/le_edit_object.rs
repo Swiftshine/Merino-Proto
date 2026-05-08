@@ -34,6 +34,12 @@ impl MapDataNode {
         current_path: &mut NodePath,
         commands: &mut Vec<EditorCommand>,
     ) {
+        if !context.can_view(self.node_type) {
+            return;
+        }
+
+        let do_edit = context.can_edit(self.node_type);
+
         match self.node_type {
             // MapNodeType::MapSet => {
             //     self.edit_mapset(context, ui, canvas_rect, current_path);
@@ -43,11 +49,11 @@ impl MapDataNode {
             }
 
             MapNodeType::MapObjSet => {
-                self.edit_mapobjset(context, commands, ui, canvas_rect, current_path);
+                self.edit_mapobjset(context, commands, ui, canvas_rect, current_path, do_edit);
             }
 
             MapNodeType::MapLocator => {
-                self.edit_maplocator(context, ui, canvas_rect, current_path);
+                self.edit_maplocator(context, ui, canvas_rect, current_path, do_edit);
             }
             _ => {}
         }
@@ -144,6 +150,7 @@ impl MapDataNode {
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
+        do_edit: bool,
     ) {
         let NodeData::MapObjSet { name, position, .. } = &mut self.node_data else {
             return;
@@ -166,17 +173,21 @@ impl MapDataNode {
             egui::Vec2::splat(SQUARE_SIZE * canvas_context.camera.zoom),
         );
 
-        let response = ui.interact(
-            canvas_rect.intersect(square),
-            egui::Id::new(&current_path),
-            egui::Sense::click_and_drag(),
-        );
-
         painter.rect_stroke(
             square,
             0.0,
             egui::Stroke::new(1.0, egui::Color32::WHITE),
             egui::StrokeKind::Middle,
+        );
+
+        if !do_edit {
+            return;
+        }
+
+        let response = ui.interact(
+            canvas_rect.intersect(square),
+            egui::Id::new(&current_path),
+            egui::Sense::click_and_drag(),
         );
 
         if response.clicked_by(egui::PointerButton::Primary) {
@@ -223,6 +234,7 @@ impl MapDataNode {
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
+        do_edit: bool,
     ) {
         let NodeData::MapLocator { name, position, .. } = &mut self.node_data else {
             return;
@@ -240,17 +252,21 @@ impl MapDataNode {
             egui::Vec2::splat(SQUARE_SIZE * context.camera.zoom),
         );
 
-        let response = ui.interact(
-            canvas_rect.intersect(square),
-            egui::Id::new(&current_path),
-            egui::Sense::click_and_drag(),
-        );
-
         painter.rect_stroke(
             square,
             0.0,
             egui::Stroke::new(1.0, egui::Color32::LIGHT_BLUE),
             egui::StrokeKind::Middle,
+        );
+
+        if !do_edit {
+            return;
+        }
+
+        let response = ui.interact(
+            canvas_rect.intersect(square),
+            egui::Id::new(&current_path),
+            egui::Sense::click_and_drag(),
         );
 
         if response.clicked_by(egui::PointerButton::Primary) {

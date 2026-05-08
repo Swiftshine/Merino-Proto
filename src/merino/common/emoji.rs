@@ -29,6 +29,7 @@ impl EmojiMessage {
     emoji_msg!(check, "✔", message);
     emoji_msg!(cross, "❌", message);
     emoji_msg!(discard, "🗑", icon);
+    emoji_msg!(burger, "☰", message);
     // emoji_msg!(folder, "📁", message);
     emoji_msg!(memo, "📝", message);
     emoji_msg!(palette, "🎨", message);

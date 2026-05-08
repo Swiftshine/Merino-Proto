@@ -65,4 +65,28 @@ impl LevelEditor {
             );
         }
     }
+
+    pub fn show_canvas_settings(&mut self, ui: &mut egui::Ui) {
+        ui.label(egui::RichText::new("Edit Settings").strong().underline())
+            .on_hover_text(
+                "Disabling any of these values will deselect every node of the corresponding type.",
+            );
+        let mut changed = false;
+        for (node_type, settings) in self.canvas_context.node_edit_settings.iter_mut() {
+            ui.horizontal(|ui| {
+                ui.label(node_type.to_string());
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        changed |= ui.checkbox(&mut settings.editable, "Editable").changed();
+
+                        changed |= ui.checkbox(&mut settings.visible, "Visible").changed();
+                    });
+                });
+            });
+        }
+
+        if changed {
+            self.canvas_context.prune_invalid_selections();
+        }
+    }
 }

@@ -4,6 +4,7 @@ use crate::merino::{
 use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
 use std::path::PathBuf;
 
+use enum_map::EnumMap;
 use strum::{Display, EnumIter};
 
 mod le_add_object;
@@ -63,6 +64,20 @@ impl EditorCommand {
 
     pub fn remove_node(path: NodePath) -> Self {
         Self::RemoveNode { path }
+    }
+}
+
+pub struct NodeEditSettings {
+    pub visible: bool,
+    pub editable: bool,
+}
+
+impl Default for NodeEditSettings {
+    fn default() -> Self {
+        Self {
+            visible: true,
+            editable: true,
+        }
     }
 }
 
@@ -147,8 +162,37 @@ pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
     pub target: Option<CanvasTarget>,
+    pub node_edit_settings: EnumMap<MapNodeType, NodeEditSettings>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
+}
+
+impl CanvasContext {
+    pub fn can_view(&self, node_type: MapNodeType) -> bool {
+        self.node_edit_settings[node_type].visible
+    }
+
+    pub fn can_edit(&self, node_type: MapNodeType) -> bool {
+        self.node_edit_settings[node_type].editable
+    }
+
+    pub fn prune_invalid_selections(&mut self) {
+        self.selected_node_paths.retain(|path| {
+            let root_settings = &self.node_edit_settings[MapNodeType::MapSet];
+
+            if !root_settings.visible || !root_settings.editable {
+                return false;
+            }
+
+            // every node in the path must be visible + editable
+            path.iter().all(|(child_type, _)| {
+                let node_type = MapNodeType::from(*child_type);
+                let settings = &self.node_edit_settings[node_type];
+
+                settings.visible && settings.editable
+            })
+        });
+    }
 }
 
 #[derive(Default)]
@@ -212,11 +256,12 @@ pub struct ObjectPropertyEditorContext {
 // todo! save/load docking settings
 #[derive(PartialEq)]
 pub enum Tab {
-    Canvas,
-    ObjectProperties,
     AddObject,
-    SetObject,
+    Canvas,
+    CanvasSettings,
     // NodeTree,
+    ObjectProperties,
+    SetObject,
 }
 
 struct TabViewer<'a> {
@@ -228,11 +273,12 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
         match tab {
-            Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
-            Tab::ObjectProperties => EmojiMessage::memo_msg("Object Properties"),
             Tab::AddObject => EmojiMessage::add_msg("Add Object"),
-            Tab::SetObject => EmojiMessage::target_msg("Set Object"),
+            Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
+            Tab::CanvasSettings => EmojiMessage::burger_msg("Canvas Settings"),
+            Tab::ObjectProperties => EmojiMessage::memo_msg("Object Properties"),
             // Tab::NodeTree => EmojiMessage::folder_msg("Node Tree"),
+            Tab::SetObject => EmojiMessage::target_msg("Set Object"),
         }
         .into()
     }
@@ -251,12 +297,30 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
         }
 
         match tab {
+            Tab::AddObject => {
+                do_if_file_open!({
+                    self.editor.show_add_object(ui);
+                });
+            }
+
             Tab::Canvas => {
                 do_if_file_open!({
                     self.editor.show_canvas(ui);
                 });
             }
 
+            Tab::CanvasSettings => {
+                do_if_file_open!({
+                    self.editor.show_canvas_settings(ui);
+                });
+            }
+            // Tab::NodeTree => {
+            //     if file_open {
+            //         self.editor.show_node_tree(ui);
+            //     } else {
+            //         ui.centered_and_justified(|ui| ui.label("No file open."));
+            //     }
+            // }
             Tab::ObjectProperties => {
                 if self.editor.canvas_context.selected_node_paths.len() == 1 {
                     let node_path = self.editor.canvas_context.selected_node_paths[0].clone();
@@ -266,23 +330,11 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
                 }
             }
 
-            Tab::AddObject => {
-                do_if_file_open!({
-                    self.editor.show_add_object(ui);
-                });
-            }
-
             Tab::SetObject => {
                 do_if_file_open!({
                     self.editor.show_set_object(ui);
                 })
-            } // Tab::NodeTree => {
-              //     if file_open {
-              //         self.editor.show_node_tree(ui);
-              //     } else {
-              //         ui.centered_and_justified(|ui| ui.label("No file open."));
-              //     }
-              // }
+            }
         }
     }
 }
@@ -345,26 +397,31 @@ impl LevelEditor {
                 ui.menu_button("Open Window", |ui| {
                     let items = [
                         (
+                            EmojiMessage::add_msg("Add Object"),
+                            Tab::AddObject,
+                            "Add an object to the canvas.",
+                        ),
+                        (
                             EmojiMessage::palette_msg("Canvas"),
                             Tab::Canvas,
                             "View the canvas.",
                         ),
+                        (
+                            EmojiMessage::burger_msg("Canvas Settings"),
+                            Tab::CanvasSettings,
+                            "Edit canvas settings.",
+                        ),
+                        // (EmojiMessage::folder_msg("Node Tree"), Tab::NodeTree, "View a tree of every node in the file.")
                         (
                             EmojiMessage::memo_msg("Object Properties"),
                             Tab::ObjectProperties,
                             "Edit object properties.",
                         ),
                         (
-                            EmojiMessage::add_msg("Add Object"),
-                            Tab::AddObject,
-                            "Add an object to the canvas.",
-                        ),
-                        (
                             EmojiMessage::target_msg("Set Object"),
                             Tab::SetObject,
                             "Make an object the child of an existing object.",
                         ),
-                        // (EmojiMessage::folder_msg("Node Tree"), Tab::NodeTree, "View a tree of every node in the file.")
                     ];
 
                     for (label, tab, hover_text) in items {
