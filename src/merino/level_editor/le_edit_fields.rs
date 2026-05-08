@@ -4,7 +4,7 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapDataNode, MapNodeType, NodeData},
     level_editor::{
-        AddTarget, CanvasContext, FileContext, LevelEditor, NodeChildType, NodePath,
+        CanvasContext, CanvasTarget, FileContext, LevelEditor, NodeChildType, NodePath,
         ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
@@ -125,18 +125,17 @@ impl LevelEditor {
                             .on_hover_text("Create a new node of this type.")
                             .clicked()
                         {
-                            canvas_context.current_add_target =
-                                Some(AddTarget::node(child_type, node_path.clone()));
+                            canvas_context.target =
+                                Some(CanvasTarget::new_to_node(child_type, node_path.clone()));
                         }
 
-                        // if ui
-                        //     .button(EmojiMessage::target_msg("Set Child"))
-                        //     .on_hover_text("Select an existing node of this type.")
-                        //     .clicked()
-                        // {
-                        //     println!("do something with this later too!");
-                        //     // todo!
-                        // }
+                        if ui
+                            .button(EmojiMessage::target_msg("Set Child"))
+                            .on_hover_text("Select an existing node of this type.")
+                            .clicked()
+                        {
+                            canvas_context.target = Some(CanvasTarget::search(node_path.clone()));
+                        }
                     });
                 });
         }

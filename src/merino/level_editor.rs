@@ -1,12 +1,8 @@
 use crate::merino::{
-    common::emoji::*,
-    game::mapbin::{MapDataNode, MapNodeType},
-};
-use std::path::PathBuf;
-
-use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
 };
+use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
+use std::path::PathBuf;
 
 use strum::{Display, EnumIter};
 
@@ -18,6 +14,7 @@ mod le_inputs;
 mod le_io;
 mod le_node_tree;
 mod le_params;
+mod le_set_object;
 mod le_traits;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter, Display)]
@@ -49,35 +46,82 @@ impl From<NodeChildType> for MapNodeType {
     }
 }
 
-// in order to keep track of which nodes are selected.
-// this is indicated in sequential traversal order
-// e.g. [[Sub1, 0], [Sub2, 0], [Sub4, 1]] would be:
-// Sub1[0].Sub2[0].Sub4[1]
-pub type NodePath = Vec<(NodeChildType, usize)>;
-
-pub enum AddTarget {
-    ToRoot(NodeChildType),
-    ToNode(NodeChildType, NodePath),
+pub enum EditorCommand {
+    MoveNode {
+        child: NodePath,
+        new_parent: NodePath,
+    },
 }
 
-impl AddTarget {
-    pub fn root(child_type: NodeChildType) -> Self {
-        Self::ToRoot(child_type)
+impl EditorCommand {
+    pub fn move_node(child: NodePath, new_parent: NodePath) -> Self {
+        Self::MoveNode { child, new_parent }
+    }
+}
+
+// in order to keep track of which nodes are selected.
+// this is indicated in sequential traversal order
+// e.g. [[MapPolySet, 0], [MapObjSet, 0], [MapItemSet, 1]] would be:
+// MapPolySet[0].MapObjSet[0].MapItemSet[1]
+pub type NodePath = Vec<(NodeChildType, usize)>;
+
+pub enum CanvasTarget {
+    /// Create a new child to attach to the root node.
+    NewToRoot(NodeChildType),
+    /// Create a new child to attach to an existing node.
+    NewToNode(NodeChildType, NodePath),
+    // /// Search for an existing node to attach to the root node.
+    // SearchRoot,
+    /// Search for an existing node to attach to the given parent.
+    Search(NodePath),
+}
+
+impl CanvasTarget {
+    pub fn new_to_root(child_type: NodeChildType) -> Self {
+        Self::NewToRoot(child_type)
     }
 
-    pub fn node(child_type: NodeChildType, new_owner: NodePath) -> Self {
-        Self::ToNode(child_type, new_owner)
+    pub fn new_to_node(child_type: NodeChildType, new_owner: NodePath) -> Self {
+        Self::NewToNode(child_type, new_owner)
     }
 
-    pub fn get_type(&self) -> NodeChildType {
-        *match self {
-            Self::ToRoot(child_type) => child_type,
-            Self::ToNode(child_type, ..) => child_type,
+    // pub fn search_root() -> Self {
+    //     Self::SearchRoot
+    // }
+
+    pub fn search(parent: NodePath) -> Self {
+        Self::Search(parent)
+    }
+
+    fn get_type(&self) -> Option<NodeChildType> {
+        match self {
+            Self::NewToRoot(child_type) => Some(*child_type),
+            Self::NewToNode(child_type, ..) => Some(*child_type),
+            _ => None,
         }
     }
 
     pub fn to_string(&self) -> String {
-        self.get_type().to_string()
+        if let Some(child_type) = self.get_type() {
+            child_type.to_string()
+        } else {
+            String::from("Existing node")
+        }
+    }
+
+    pub fn is_add(&self) -> bool {
+        match self {
+            Self::NewToRoot(..) => true,
+            Self::NewToNode(..) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_search(&self) -> bool {
+        match self {
+            Self::Search(..) => true,
+            _ => false,
+        }
     }
 }
 
@@ -85,7 +129,7 @@ impl AddTarget {
 pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
-    pub current_add_target: Option<AddTarget>,
+    pub target: Option<CanvasTarget>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
 }
@@ -102,16 +146,35 @@ pub struct FileContext {
 }
 
 impl FileContext {
-    pub fn find_node_mut(&mut self, path: &NodePath) -> Option<&mut MapDataNode> {
-        let mut node = &mut self.mapdata.root;
-
-        for (child_type, index) in path {
-            node = node
-                .children_of_type_vec_mut(*child_type)?
-                .get_mut(*index)?;
+    pub fn move_node(&mut self, child: &NodePath, new_parent: &NodePath) {
+        if child.is_empty() {
+            // can't move root node
+            return;
         }
 
-        Some(node)
+        // prevent a node from moving into itself or its descendants
+        if new_parent.starts_with(child) {
+            return;
+        }
+
+        // final segment tells us what child list this node belongs to
+        let (child_type, _) = *child.last().unwrap();
+
+        // remove node
+        let Some(node) = self.mapdata.remove_node_at_path(child) else {
+            return;
+        };
+
+        // find new parent
+        let Some(parent) = self.mapdata.get_node_at_path(new_parent) else {
+            return;
+        };
+
+        // push node
+        parent
+            .children_of_type_vec_option_mut(child_type)
+            .get_or_insert_with(Vec::new)
+            .push(node);
     }
 }
 
@@ -135,6 +198,7 @@ pub enum Tab {
     Canvas,
     ObjectProperties,
     AddObject,
+    SetObject,
     // NodeTree,
 }
 
@@ -150,6 +214,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
             Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
             Tab::ObjectProperties => EmojiMessage::memo_msg("Object Properties"),
             Tab::AddObject => EmojiMessage::add_msg("Add Object"),
+            Tab::SetObject => EmojiMessage::target_msg("Set Object"),
             // Tab::NodeTree => EmojiMessage::folder_msg("Node Tree"),
         }
         .into()
@@ -188,6 +253,12 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
                 do_if_file_open!({
                     self.editor.show_add_object(ui);
                 });
+            }
+
+            Tab::SetObject => {
+                do_if_file_open!({
+                    self.editor.show_set_object(ui);
+                })
             } // Tab::NodeTree => {
               //     if file_open {
               //         self.editor.show_node_tree(ui);
@@ -252,24 +323,37 @@ impl LevelEditor {
                     let _ = self.load_param_data();
                 }
 
-                if ui.button(EmojiMessage::palette_msg("Canvas")).clicked() {
-                    self.open_tab(Tab::Canvas);
-                }
+                ui.menu_button("Open Window", |ui| {
+                    let items = [
+                        (
+                            EmojiMessage::palette_msg("Canvas"),
+                            Tab::Canvas,
+                            "View the canvas.",
+                        ),
+                        (
+                            EmojiMessage::memo_msg("Object Properties"),
+                            Tab::ObjectProperties,
+                            "Edit object properties.",
+                        ),
+                        (
+                            EmojiMessage::add_msg("Add Object"),
+                            Tab::AddObject,
+                            "Add an object to the canvas.",
+                        ),
+                        (
+                            EmojiMessage::target_msg("Set Object"),
+                            Tab::SetObject,
+                            "Make an object the child of an existing object.",
+                        ),
+                        // (EmojiMessage::folder_msg("Node Tree"), Tab::NodeTree, "View a tree of every node in the file.")
+                    ];
 
-                if ui
-                    .button(EmojiMessage::memo_msg("Object Properties"))
-                    .clicked()
-                {
-                    self.open_tab(Tab::ObjectProperties)
-                }
-
-                if ui.button(EmojiMessage::add_msg("Add Object")).clicked() {
-                    self.open_tab(Tab::AddObject)
-                }
-
-                // if ui.button(EmojiMessage::folder_msg("Node Tree")).clicked() {
-                //     self.open_tab(Tab::NodeTree)
-                // }
+                    for (label, tab, hover_text) in items {
+                        if ui.button(label).on_hover_text(hover_text).clicked() {
+                            self.open_tab(tab);
+                        }
+                    }
+                });
             });
         });
 

@@ -1,6 +1,6 @@
 use crate::merino::{
     game::mapbin::{MapDataNode, MapNodeType, NodeData, Vec2f},
-    level_editor::{CanvasContext, LevelEditor, NodePath},
+    level_editor::{CanvasContext, CanvasTarget, EditorCommand, LevelEditor, NodePath},
 };
 
 const SQUARE_SIZE: f32 = 2.0;
@@ -14,10 +14,23 @@ const SELECTION_HIGHLIGHT: egui::Color32 =
 impl LevelEditor {
     pub fn edit_all_nodes(&mut self, ui: &mut egui::Ui, canvas_rect: egui::Rect) {
         let mut path = Vec::new();
-        self.file_context
-            .mapdata
-            .root
-            .edit(&mut self.canvas_context, ui, canvas_rect, &mut path);
+        let mut commands = Vec::new();
+
+        self.file_context.mapdata.root.edit(
+            &mut self.canvas_context,
+            ui,
+            canvas_rect,
+            &mut path,
+            &mut commands,
+        );
+
+        for command in commands {
+            match command {
+                EditorCommand::MoveNode { child, new_parent } => {
+                    self.file_context.move_node(&child, &new_parent);
+                }
+            }
+        }
     }
 }
 
@@ -28,6 +41,7 @@ impl MapDataNode {
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
+        commands: &mut Vec<EditorCommand>,
     ) {
         match self.node_type {
             // MapNodeType::MapSet => {
@@ -38,7 +52,7 @@ impl MapDataNode {
             }
 
             MapNodeType::MapObjSet => {
-                self.edit_mapobjset(context, ui, canvas_rect, current_path);
+                self.edit_mapobjset(context, commands, ui, canvas_rect, current_path);
             }
 
             MapNodeType::MapLocator => {
@@ -49,7 +63,7 @@ impl MapDataNode {
 
         for (branch, index, child) in self.all_children_mut() {
             current_path.push((branch, index));
-            child.edit(context, ui, canvas_rect, current_path);
+            child.edit(context, ui, canvas_rect, current_path, commands);
             current_path.pop();
         }
     }
@@ -134,7 +148,8 @@ impl MapDataNode {
 
     fn edit_mapobjset(
         &mut self,
-        context: &mut CanvasContext,
+        canvas_context: &mut CanvasContext,
+        commands: &mut Vec<EditorCommand>,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
         current_path: &mut NodePath,
@@ -144,20 +159,20 @@ impl MapDataNode {
         };
 
         // check if we should process this at all
-        if !(context.display_dummy_terrain || name.as_str() != "dummy_terrain") {
+        if !(canvas_context.display_dummy_terrain || name.as_str() != "dummy_terrain") {
             return;
         }
 
         let painter = ui.painter_at(canvas_rect);
 
         let screen_pos = canvas_rect.min
-            + context
+            + canvas_context
                 .camera
                 .convert_to_camera(Vec2f::from(*position).into());
 
         let square = egui::Rect::from_center_size(
             egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SQUARE_SIZE * context.camera.zoom),
+            egui::Vec2::splat(SQUARE_SIZE * canvas_context.camera.zoom),
         );
 
         let response = ui.interact(
@@ -174,14 +189,27 @@ impl MapDataNode {
         );
 
         if response.clicked_by(egui::PointerButton::Primary) {
-            context.selected_node_paths.push(current_path.clone());
+            // check if a child is being searched for
+            if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
+                // todo! make all selected nodes a child of the new parent
+                // but for now we're just going to work with clicking on this one
+                commands.push(EditorCommand::move_node(
+                    current_path.clone(),
+                    parent_path.clone(),
+                ));
+            } else {
+                // not being looked for, just select
+                canvas_context
+                    .selected_node_paths
+                    .push(current_path.clone());
+            }
         } else if response.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = response.drag_delta() / context.camera.zoom;
+            let world_delta = response.drag_delta() / canvas_context.camera.zoom;
             position.x += world_delta.x;
             position.y -= world_delta.y;
         }
 
-        let selected = context.selected_node_paths.contains(current_path);
+        let selected = canvas_context.selected_node_paths.contains(current_path);
 
         if response.hovered() || selected {
             // display name above if hovered

@@ -30,7 +30,8 @@
     - [ ] handle sub-nodes
         - [x] add
         - [x] remove
-        - [ ] turn existing node into child
+        - [x] turn existing node into child
+            - this is a little buggy
     - [x] parameter parsing
     - [x] object addition
     - [ ] object removal

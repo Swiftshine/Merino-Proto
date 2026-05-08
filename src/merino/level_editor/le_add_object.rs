@@ -2,7 +2,7 @@ use strum::IntoEnumIterator;
 
 use crate::merino::{
     game::mapbin::{MapDataNode, NodeData, Vec3f},
-    level_editor::{AddTarget, CanvasContext, FileContext, LevelEditor, NodeChildType},
+    level_editor::{CanvasContext, CanvasTarget, FileContext, LevelEditor, NodeChildType},
 };
 
 impl LevelEditor {
@@ -20,7 +20,7 @@ impl LevelEditor {
                 )
                 .clicked()
             {
-                self.canvas_context.current_add_target = Some(AddTarget::root(child_type));
+                self.canvas_context.target = Some(CanvasTarget::new_to_root(child_type));
             }
         }
     }
@@ -33,7 +33,7 @@ impl LevelEditor {
         canvas_context: &mut CanvasContext,
     ) {
         // take the target
-        let Some(add_target) = canvas_context.current_add_target.take() else {
+        let Some(target) = canvas_context.target.take() else {
             return;
         };
 
@@ -45,29 +45,11 @@ impl LevelEditor {
                 pointer_pos - egui::Vec2::new(0.0, 10.0),
                 egui::Align2::CENTER_BOTTOM,
                 egui::Color32::WHITE,
-                add_target.to_string(),
+                target.to_string(),
             );
 
             // draw crosshair
-            painter.circle_filled(pointer_pos, 1.0, egui::Color32::GRAY);
-            let crosshair_size = 10.0;
-
-            // horizontal line
-            painter.line_segment(
-                [
-                    pointer_pos - egui::vec2(crosshair_size, 0.0),
-                    pointer_pos + egui::vec2(crosshair_size, 0.0),
-                ],
-                egui::Stroke::new(1.0, egui::Color32::WHITE),
-            );
-            // vertical line
-            painter.line_segment(
-                [
-                    pointer_pos - egui::vec2(0.0, crosshair_size),
-                    pointer_pos + egui::vec2(0.0, crosshair_size),
-                ],
-                egui::Stroke::new(1.0, egui::Color32::WHITE),
-            );
+            Self::draw_crosshair(painter, response);
         }
 
         // we already know the response is hovered
@@ -78,9 +60,9 @@ impl LevelEditor {
             let local_pos = (pointer_pos - response.rect.min).to_pos2();
             let version = file_context.mapdata.version;
 
-            match &add_target {
-                AddTarget::ToRoot(child_type) => {
-                    Self::add_object_to_node(
+            match &target {
+                CanvasTarget::NewToRoot(child_type) => {
+                    Self::add_new_object_to_node(
                         version,
                         &mut file_context.mapdata.root,
                         *child_type,
@@ -90,9 +72,9 @@ impl LevelEditor {
                     placed = true;
                 }
 
-                AddTarget::ToNode(child_type, path) => {
-                    if let Some(node) = file_context.find_node_mut(path) {
-                        Self::add_object_to_node(
+                CanvasTarget::NewToNode(child_type, path) => {
+                    if let Some(node) = file_context.mapdata.root.find_node_mut(path) {
+                        Self::add_new_object_to_node(
                             version,
                             node,
                             *child_type,
@@ -102,18 +84,20 @@ impl LevelEditor {
                         placed = true;
                     }
                 }
+
+                _ => unreachable!(),
             }
         }
 
         // put it back if still needed
         if placed {
-            canvas_context.current_add_target = None;
+            canvas_context.target = None;
         } else {
-            canvas_context.current_add_target = Some(add_target);
+            canvas_context.target = Some(target);
         }
     }
 
-    fn add_object_to_node(
+    fn add_new_object_to_node(
         version: f32,
         parent_node: &mut MapDataNode,
         child_type: NodeChildType,

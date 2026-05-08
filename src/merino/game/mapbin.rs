@@ -373,6 +373,27 @@ pub struct MapDataNode {
 }
 
 impl MapDataNode {
+    // pub fn remove_child(&mut self, child_type: NodeChildType, index: usize) -> Option<MapDataNode> {
+    //     let vec = self.children_of_type_vec_mut(child_type)?;
+    //     if index < vec.len() {
+    //         Some(vec.remove(index))
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    pub fn find_node_mut(&mut self, path: &NodePath) -> Option<&mut MapDataNode> {
+        let mut node = self;
+
+        for (child_type, index) in path {
+            node = node
+                .children_of_type_vec_mut(*child_type)?
+                .get_mut(*index)?;
+        }
+
+        Some(node)
+    }
+
     fn collect_strings(
         &self,
         object_types: &mut Vec<String32>,
@@ -514,6 +535,23 @@ impl MapDataNode {
         };
 
         list.as_mut().into_iter().flatten()
+    }
+
+    pub fn children_of_type_vec_option_mut(
+        &mut self,
+        child_type: NodeChildType,
+    ) -> &mut Option<Vec<MapDataNode>> {
+        match child_type {
+            NodeChildType::MapPolySet => &mut self.children_mappolyset,
+            NodeChildType::MapObjSet => &mut self.children_mapobjset,
+            NodeChildType::MapItemSet => &mut self.children_mapitemset,
+            NodeChildType::MapEnemySet => &mut self.children_mapenemyset,
+            NodeChildType::MapLocator => &mut self.children_maplocator,
+            NodeChildType::MapPath => &mut self.children_mappath,
+            NodeChildType::MapRect => &mut self.children_maprect,
+            NodeChildType::MapCircle => &mut self.children_mapcircle,
+            NodeChildType::MapTerrain => &mut self.children_mapterrain,
+        }
     }
 
     pub fn children_of_type_vec_mut(

@@ -14,8 +14,8 @@ impl LevelEditor {
 
         if escape_pressed {
             // only escape from one action at a time
-            if self.canvas_context.current_add_target.is_some() {
-                self.canvas_context.current_add_target = None;
+            if self.canvas_context.target.is_some() {
+                self.canvas_context.target = None;
             } else {
                 self.canvas_context.selected_node_paths.clear();
             }
