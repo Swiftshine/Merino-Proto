@@ -20,7 +20,7 @@ impl LevelEditor {
                 )
                 .clicked()
             {
-                self.canvas_context.current_add_object = Some(AddTarget::root(child_type));
+                self.canvas_context.current_add_target = Some(AddTarget::root(child_type));
             }
         }
     }
@@ -33,7 +33,7 @@ impl LevelEditor {
         canvas_context: &mut CanvasContext,
     ) {
         // take the target
-        let Some(add_target) = canvas_context.current_add_object.take() else {
+        let Some(add_target) = canvas_context.current_add_target.take() else {
             return;
         };
 
@@ -107,9 +107,9 @@ impl LevelEditor {
 
         // put it back if still needed
         if placed {
-            canvas_context.current_add_object = None;
+            canvas_context.current_add_target = None;
         } else {
-            canvas_context.current_add_object = Some(add_target);
+            canvas_context.current_add_target = Some(add_target);
         }
     }
 

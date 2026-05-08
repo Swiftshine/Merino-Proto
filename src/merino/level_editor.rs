@@ -85,7 +85,7 @@ impl AddTarget {
 pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
-    pub current_add_object: Option<AddTarget>,
+    pub current_add_target: Option<AddTarget>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
 }

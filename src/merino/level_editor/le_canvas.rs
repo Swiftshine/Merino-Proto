@@ -19,7 +19,7 @@ impl LevelEditor {
 
         if response.hovered() {
             // add objects
-            if self.canvas_context.current_add_object.is_some() {
+            if self.canvas_context.current_add_target.is_some() {
                 Self::add_object(
                     ui,
                     painter,

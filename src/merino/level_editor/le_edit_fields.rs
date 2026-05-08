@@ -125,7 +125,7 @@ impl LevelEditor {
                             .on_hover_text("Create a new node of this type.")
                             .clicked()
                         {
-                            canvas_context.current_add_object =
+                            canvas_context.current_add_target =
                                 Some(AddTarget::node(child_type, node_path.clone()));
                         }
 
