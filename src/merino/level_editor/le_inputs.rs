@@ -10,8 +10,15 @@ impl LevelEditor {
         }
 
         // clear selections
-        if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
-            self.canvas_context.selected_node_paths.clear();
+        let escape_pressed = ui.input(|i| i.key_pressed(egui::Key::Escape));
+
+        if escape_pressed {
+            // only escape from one action at a time
+            if self.canvas_context.current_add_object.is_some() {
+                self.canvas_context.current_add_object = None;
+            } else {
+                self.canvas_context.selected_node_paths.clear();
+            }
         }
     }
 }

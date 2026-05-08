@@ -58,13 +58,13 @@ pub type String16 = LimitedString<16>;
 pub type String32 = LimitedString<32>;
 pub type String64 = LimitedString<64>;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec2f {
     pub x: f32,
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3f {
     pub x: f32,
     pub y: f32,
@@ -76,6 +76,16 @@ pub struct Params<const N: usize> {
     pub int_values: [i32; N],
     pub float_values: [f32; N],
     pub string_values: [String64; N],
+}
+
+impl<const N: usize> Default for Params<N> {
+    fn default() -> Self {
+        Self {
+            int_values: [0; N],
+            float_values: [0.0; N],
+            string_values: std::array::from_fn(|_| Default::default()),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -204,7 +214,150 @@ pub enum NodeData {
     },
 }
 
-#[derive(Default)]
+impl NodeData {
+    // pub fn default_map_set() -> Self {
+    //     Self::MapSet {
+    //         unk1: None,
+    //         bounds_start: Default::default(),
+    //         bounds_end: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_poly_set() -> Self {
+    //     Self::MapPolySet {
+    //         start: Default::default(),
+    //         end: Default::default(),
+    //         unk1: Default::default(),
+    //         collision_type: Default::default(),
+    //         unk3: 0,
+    //     }
+    // }
+
+    pub fn default_map_obj_set(version: f32) -> Self {
+        Self::MapObjSet {
+            name: Default::default(),
+            position: Default::default(),
+            unk3: 0.0,
+            unk4: Default::default(),
+            unk5: Default::default(),
+            unk6: (version >= 4.43).then(|| 0),
+            unk7: (version >= 4.44).then(|| String32::default()),
+            unk8: Default::default(),
+            unk9: Default::default(),
+            unk10: (version >= 4.71).then(|| 0),
+            unk11: (version >= 4.71).then(|| 0),
+            unk12: (version >= 4.71).then(|| 0),
+            unk13: (version >= 4.71).then(|| 0),
+            params: Default::default(),
+            unk14: (version >= 4.50).then(|| Default::default()),
+        }
+    }
+
+    // pub fn default_map_item_set() -> Self {
+    //     Self::MapItemSet {
+    //         name: Default::default(),
+    //         unk2: Default::default(),
+    //         unk3: Default::default(),
+    //         unk4: Default::default(),
+    //         unk5: Default::default(),
+    //         unk6: None,
+    //         unk7: None,
+    //         unk8: Default::default(),
+    //         unk9: Default::default(),
+    //         unk10: None,
+    //         unk11: None,
+    //         unk12: None,
+    //         unk13: None,
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_enemy_set() -> Self {
+    //     Self::MapEnemySet {
+    //         name: Default::default(),
+    //         direction: Default::default(),
+    //         orientation: Default::default(),
+    //         position: Default::default(),
+    //         unk7: None,
+    //         unk8: None,
+    //         unk9: None,
+    //         unk10: None,
+    //         unk11: None,
+    //         unk12: None,
+    //         unk13: 0,
+    //         unk14: None,
+    //         unk15: None,
+    //         unk16: 0.0,
+    //         unk17: 0.0,
+    //         unk18: 0.0,
+    //         unk19: 0.0,
+    //         unk20: None,
+    //         unk21: None,
+    //         unk22: None,
+    //         unk23: None,
+    //         unk24: None,
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_locator() -> Self {
+    //     Self::MapLocator {
+    //         name: Default::default(),
+    //         position: Default::default(),
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_path() -> Self {
+    //     Self::MapPath {
+    //         name: Default::default(),
+    //         points: Default::default(),
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_rect() -> Self {
+    //     Self::MapRect {
+    //         name: Default::default(),
+    //         bounds_start: Default::default(),
+    //         bounds_end: Default::default(),
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_circle() -> Self {
+    //     Self::MapCircle {
+    //         name: Default::default(),
+    //         position: Default::default(),
+    //         radius: 0.0,
+    //         params: Default::default(),
+    //     }
+    // }
+
+    // pub fn default_map_terrain() -> Self {
+    //     Self::MapTerrain {
+    //         collision_type: Default::default(),
+    //         unk2: 0.0,
+    //         unk3: 0.0,
+    //         unk4: 0.0,
+    //         unk5: None,
+    //         unk6: None,
+    //         unk7: 0.0,
+    //         unk8: 0.0,
+    //         unk9: 0.0,
+    //         unk10: 0.0,
+    //         unk11: None,
+    //         unk12: None,
+    //         unk13: None,
+    //         unk14: None,
+    //         unk15: Default::default(),
+    //         params: Default::default(),
+    //         unk16: None,
+    //     }
+    // }
+}
+
+#[derive(Debug, Default)]
 pub struct MapDataNode {
     pub node_type: MapNodeType,
     pub node_data: NodeData,
@@ -361,6 +514,23 @@ impl MapDataNode {
         };
 
         list.as_mut().into_iter().flatten()
+    }
+
+    pub fn children_of_type_vec_mut(
+        &mut self,
+        child_type: NodeChildType,
+    ) -> Option<&mut Vec<MapDataNode>> {
+        match child_type {
+            NodeChildType::MapPolySet => self.children_mappolyset.as_mut(),
+            NodeChildType::MapObjSet => self.children_mapobjset.as_mut(),
+            NodeChildType::MapItemSet => self.children_mapitemset.as_mut(),
+            NodeChildType::MapEnemySet => self.children_mapenemyset.as_mut(),
+            NodeChildType::MapLocator => self.children_maplocator.as_mut(),
+            NodeChildType::MapPath => self.children_mappath.as_mut(),
+            NodeChildType::MapRect => self.children_maprect.as_mut(),
+            NodeChildType::MapCircle => self.children_mapcircle.as_mut(),
+            NodeChildType::MapTerrain => self.children_mapterrain.as_mut(),
+        }
     }
 }
 

@@ -1,4 +1,7 @@
-use crate::merino::common::emoji::*;
+use crate::merino::{
+    common::emoji::*,
+    game::mapbin::{MapDataNode, MapNodeType},
+};
 use std::path::PathBuf;
 
 use crate::merino::{
@@ -7,6 +10,7 @@ use crate::merino::{
 
 use strum::{Display, EnumIter};
 
+mod le_add_object;
 mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
@@ -29,16 +33,60 @@ pub enum NodeChildType {
     MapTerrain,
 }
 
+impl From<NodeChildType> for MapNodeType {
+    fn from(value: NodeChildType) -> Self {
+        match value {
+            NodeChildType::MapPolySet => Self::MapPolySet,
+            NodeChildType::MapObjSet => Self::MapObjSet,
+            NodeChildType::MapItemSet => Self::MapItemSet,
+            NodeChildType::MapEnemySet => Self::MapEnemySet,
+            NodeChildType::MapLocator => Self::MapLocator,
+            NodeChildType::MapPath => Self::MapPath,
+            NodeChildType::MapRect => Self::MapRect,
+            NodeChildType::MapCircle => Self::MapCircle,
+            NodeChildType::MapTerrain => Self::MapTerrain,
+        }
+    }
+}
+
 // in order to keep track of which nodes are selected.
 // this is indicated in sequential traversal order
 // e.g. [[Sub1, 0], [Sub2, 0], [Sub4, 1]] would be:
 // Sub1[0].Sub2[0].Sub4[1]
 pub type NodePath = Vec<(NodeChildType, usize)>;
 
+pub enum AddTarget {
+    ToRoot(NodeChildType),
+    ToNode(NodeChildType, NodePath),
+}
+
+impl AddTarget {
+    pub fn root(child_type: NodeChildType) -> Self {
+        Self::ToRoot(child_type)
+    }
+
+    pub fn node(child_type: NodeChildType, new_owner: NodePath) -> Self {
+        Self::ToNode(child_type, new_owner)
+    }
+
+    pub fn get_type(&self) -> NodeChildType {
+        match self {
+            Self::ToRoot(child_type) => child_type,
+            Self::ToNode(child_type, ..) => child_type,
+        }
+        .clone()
+    }
+
+    pub fn to_string(&self) -> String {
+        self.get_type().to_string()
+    }
+}
+
 #[derive(Default)]
 pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
+    pub current_add_object: Option<AddTarget>,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
 }
@@ -52,6 +100,20 @@ pub struct IOContext {
 #[derive(Default)]
 pub struct FileContext {
     pub mapdata: Mapbin,
+}
+
+impl FileContext {
+    pub fn find_node_mut(&mut self, path: &NodePath) -> Option<&mut MapDataNode> {
+        let mut node = &mut self.mapdata.root;
+
+        for (child_type, index) in path {
+            node = node
+                .children_of_type_vec_mut(child_type.clone())?
+                .get_mut(*index)?;
+        }
+
+        Some(node)
+    }
 }
 
 #[derive(Default)]
@@ -68,6 +130,7 @@ pub struct ObjectPropertyEditorContext {
 //     }
 // }
 
+// todo! save/load docking settings
 #[derive(PartialEq)]
 pub enum Tab {
     Canvas,
@@ -96,13 +159,21 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
         let file_open = self.editor.io_context.file_open;
 
-        match tab {
-            Tab::Canvas => {
+        macro_rules! do_if_file_open {
+            ($body:expr) => {
                 if file_open {
-                    self.editor.show_canvas(ui);
+                    $body
                 } else {
                     ui.centered_and_justified(|ui| ui.label("No file open."));
                 }
+            };
+        }
+
+        match tab {
+            Tab::Canvas => {
+                do_if_file_open!({
+                    self.editor.show_canvas(ui);
+                });
             }
 
             Tab::ObjectProperties => {
@@ -115,7 +186,9 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
             }
 
             Tab::AddObject => {
-                ui.label("blah blah");
+                do_if_file_open!({
+                    self.editor.show_add_object(ui);
+                });
             } // Tab::NodeTree => {
               //     if file_open {
               //         self.editor.show_node_tree(ui);

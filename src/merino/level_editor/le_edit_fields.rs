@@ -4,7 +4,7 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapDataNode, MapNodeType, NodeData},
     level_editor::{
-        CanvasContext, FileContext, LevelEditor, NodeChildType, NodePath,
+        AddTarget, CanvasContext, FileContext, LevelEditor, NodeChildType, NodePath,
         ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
@@ -75,8 +75,8 @@ impl LevelEditor {
                 .show(ui, |ui| {
                     ui.label(child_type.to_string());
 
+                    // dont make indentations if no children present
                     let has_children = node.has_child_of_type(child_type);
-
                     if has_children {
                         ui.indent(ui.id().with(child_type), |ui| {
                             for (index, _) in node.children_of_type_mut(child_type).enumerate() {
@@ -113,7 +113,6 @@ impl LevelEditor {
                             }
                         });
                     }
-                    // dont make indentations if no children present
 
                     ui.horizontal(|ui| {
                         if ui
@@ -121,18 +120,18 @@ impl LevelEditor {
                             .on_hover_text("Create a new node of this type.")
                             .clicked()
                         {
-                            println!("do something with this later!");
-                            // todo!
+                            canvas_context.current_add_object =
+                                Some(AddTarget::node(child_type, node_path.clone()));
                         }
 
-                        if ui
-                            .button(EmojiMessage::target_msg("Set Child"))
-                            .on_hover_text("Select an existing node of this type.")
-                            .clicked()
-                        {
-                            println!("do something with this later too!");
-                            // todo!
-                        }
+                        // if ui
+                        //     .button(EmojiMessage::target_msg("Set Child"))
+                        //     .on_hover_text("Select an existing node of this type.")
+                        //     .clicked()
+                        // {
+                        //     println!("do something with this later too!");
+                        //     // todo!
+                        // }
                     });
                 });
         }
