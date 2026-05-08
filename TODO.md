@@ -34,7 +34,7 @@
             - this is a little buggy
     - [x] parameter parsing
     - [x] object addition
-    - [ ] object removal
+    - [x] object removal
 - [x] Level saving
 
 ## Things to add in the final

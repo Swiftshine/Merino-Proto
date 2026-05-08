@@ -14,23 +14,14 @@ const SELECTION_HIGHLIGHT: egui::Color32 =
 impl LevelEditor {
     pub fn edit_all_nodes(&mut self, ui: &mut egui::Ui, canvas_rect: egui::Rect) {
         let mut path = Vec::new();
-        let mut commands = Vec::new();
 
         self.file_context.mapdata.root.edit(
             &mut self.canvas_context,
             ui,
             canvas_rect,
             &mut path,
-            &mut commands,
+            &mut self.editor_context.commands,
         );
-
-        for command in commands {
-            match command {
-                EditorCommand::MoveNode { child, new_parent } => {
-                    self.file_context.move_node(&child, &new_parent);
-                }
-            }
-        }
     }
 }
 

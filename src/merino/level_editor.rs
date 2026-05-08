@@ -51,11 +51,18 @@ pub enum EditorCommand {
         child: NodePath,
         new_parent: NodePath,
     },
+    RemoveNode {
+        path: NodePath,
+    },
 }
 
 impl EditorCommand {
     pub fn move_node(child: NodePath, new_parent: NodePath) -> Self {
         Self::MoveNode { child, new_parent }
+    }
+
+    pub fn remove_node(path: NodePath) -> Self {
+        Self::RemoveNode { path }
     }
 }
 
@@ -123,6 +130,16 @@ impl CanvasTarget {
             _ => false,
         }
     }
+}
+
+pub struct DeleteConfirmation {
+    path: NodePath,
+}
+
+#[derive(Default)]
+pub struct EditorContext {
+    pub commands: Vec<EditorCommand>,
+    pub pending_delete: Option<DeleteConfirmation>,
 }
 
 #[derive(Default)]
@@ -276,6 +293,7 @@ pub struct LevelEditor {
     pub file_context: FileContext,
     pub canvas_context: CanvasContext,
     pub object_property_editor_context: ObjectPropertyEditorContext,
+    pub editor_context: EditorContext,
 
     pub dock_state: egui_dock::DockState<Tab>,
 }
@@ -296,6 +314,7 @@ impl LevelEditor {
             file_context: Default::default(),
             canvas_context: Default::default(),
             object_property_editor_context: Default::default(),
+            editor_context: Default::default(),
             dock_state,
         }
     }
@@ -357,6 +376,9 @@ impl LevelEditor {
             });
         });
 
+        self.process_commands();
+        self.show_delete_confirmation(ui.ctx());
+
         // temporarily move dock_state to avoid borrowing &mut self twice
         let mut dock_state =
             std::mem::replace(&mut self.dock_state, egui_dock::DockState::new(vec![]));
@@ -392,6 +414,87 @@ impl LevelEditor {
             .any(|node| node.tabs().is_some_and(|tabs| tabs.contains(&tab)))
         {
             self.dock_state.main_surface_mut().push_to_focused_leaf(tab);
+        }
+    }
+
+    fn process_commands(&mut self) {
+        if !self.editor_context.commands.is_empty() {
+            // take all commands, leaving empty vec
+            let commands = std::mem::take(&mut self.editor_context.commands);
+
+            for command in commands {
+                match command {
+                    EditorCommand::MoveNode { child, new_parent } => {
+                        self.file_context.move_node(&child, &new_parent);
+                    }
+
+                    EditorCommand::RemoveNode { path } => {
+                        self.editor_context.pending_delete =
+                            Some(DeleteConfirmation { path: path });
+                    }
+                }
+            }
+        }
+    }
+
+    fn show_delete_confirmation(&mut self, ctx: &egui::Context) {
+        let Some(delete) = &self.editor_context.pending_delete else {
+            return;
+        };
+
+        let path = delete.path.clone();
+
+        let has_children = self
+            .file_context
+            .mapdata
+            .get_node_at_path(&path)
+            .map_or(false, |node| node.has_children());
+
+        let mut should_close = false;
+        let mut confirmed = false;
+
+        egui::Window::new("Confirm Deletion")
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
+            .show(ctx, |ui| {
+                // todo! replace the implementation in le_edit_field.rs with this one
+
+                if has_children {
+                    ui.colored_label(
+                        egui::Color32::LIGHT_RED,
+                        EmojiMessage::warning_msg("Warning: this child has children."),
+                    );
+
+                    ui.label("Deleting it will remove all nested nodes.");
+                }
+
+                ui.label("Are you sure you want to delete this node?");
+
+                ui.add_space(10.0);
+
+                ui.horizontal(|ui| {
+                    if ui.button(EmojiMessage::cross_msg("Cancel")).clicked() {
+                        should_close = true;
+                    }
+
+                    if ui.button(EmojiMessage::check_msg("Confirm")).clicked() {
+                        confirmed = true;
+                        should_close = true;
+                    }
+                });
+            });
+
+        if confirmed {
+            self.file_context.mapdata.remove_node_at_path(&path);
+
+            self.canvas_context
+                .selected_node_paths
+                .retain(|p| p != &path);
+        }
+
+        if should_close {
+            self.editor_context.pending_delete = None;
         }
     }
 }

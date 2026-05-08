@@ -4,8 +4,8 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapDataNode, MapNodeType, NodeData},
     level_editor::{
-        CanvasContext, CanvasTarget, FileContext, LevelEditor, NodeChildType, NodePath,
-        ObjectPropertyEditorContext,
+        CanvasContext, CanvasTarget, EditorCommand, FileContext, LevelEditor, NodeChildType,
+        NodePath, ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
 };
@@ -25,7 +25,20 @@ impl LevelEditor {
             None => return,
         };
 
-        ui.label(egui::RichText::new("Properties").strong());
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Properties").strong());
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui
+                    .button(EmojiMessage::discard())
+                    .on_hover_text("Delete node")
+                    .clicked()
+                {
+                    self.editor_context
+                        .commands
+                        .push(EditorCommand::remove_node(node_path.clone()));
+                }
+            });
+        });
         egui::ScrollArea::vertical()
             .max_height(400.0)
             .show(ui, |ui| {
