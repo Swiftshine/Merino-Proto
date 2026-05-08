@@ -7,7 +7,7 @@
 
 // impl MapDataNode {
 //     // todo! show selected object (the one the object properties menu is open for) in node tree.
-
+//     // todo! also use dragging and dropping or some other manual node moving method
 //     /// Helper method for showing a tree.
 //     fn ui_show_tree(&mut self, ui: &mut egui::Ui, name: &str, path: &mut NodePath) {
 //         egui::CollapsingHeader::new(name)
