@@ -120,27 +120,33 @@ impl LevelEditor {
         pointer_pos: egui::Pos2,
         canvas_context: &CanvasContext,
     ) {
-        if child_type == NodeChildType::MapObjSet {
-            let pos = canvas_context
-                .camera
-                .convert_from_camera(pointer_pos.to_vec2());
+        match child_type {
+            NodeChildType::MapObjSet => {
+                let pos = canvas_context
+                    .camera
+                    .convert_from_camera(pointer_pos.to_vec2());
 
-            let mut node_data = NodeData::default_map_obj_set(version);
+                let mut node_data = NodeData::default_map_obj_set(version);
 
-            if let NodeData::MapObjSet { position, .. } = &mut node_data {
-                *position = pos.into();
-            };
+                if let NodeData::MapObjSet { position, .. } = &mut node_data {
+                    *position = pos.into();
+                };
 
-            let node = MapDataNode {
-                node_type: child_type.into(),
-                node_data,
-                ..Default::default()
-            };
+                let node = MapDataNode {
+                    node_type: child_type.into(),
+                    node_data,
+                    ..Default::default()
+                };
 
-            parent_node
-                .children_mapobjset
-                .get_or_insert_with(Vec::new)
-                .push(node);
+                parent_node
+                    .children_mapobjset
+                    .get_or_insert_with(Vec::new)
+                    .push(node);
+            }
+
+            _ => {
+                todo!()
+            }
         }
     }
 }

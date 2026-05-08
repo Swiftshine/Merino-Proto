@@ -29,12 +29,18 @@ impl LevelEditor {
         egui::ScrollArea::vertical()
             .max_height(400.0)
             .show(ui, |ui| {
-                if node.node_type == MapNodeType::MapObjSet {
-                    Self::edit_mapobjset_properties(
-                        ui,
-                        object_property_editor_context,
-                        &mut node.node_data,
-                    );
+                match node.node_type {
+                    MapNodeType::MapObjSet => {
+                        Self::edit_mapobjset_properties(
+                            ui,
+                            object_property_editor_context,
+                            &mut node.node_data,
+                        );
+                    }
+
+                    _ => {
+                        // todo!
+                    }
                 }
             });
 
