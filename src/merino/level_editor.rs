@@ -12,6 +12,7 @@ mod le_edit_fields;
 mod le_edit_object;
 mod le_inputs;
 mod le_io;
+mod le_node_tree;
 mod le_params;
 mod le_traits;
 
@@ -72,6 +73,7 @@ pub enum Tab {
     Canvas,
     ObjectProperties,
     AddObject,
+    // NodeTree,
 }
 
 struct TabViewer<'a> {
@@ -86,14 +88,17 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
             Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
             Tab::ObjectProperties => EmojiMessage::memo_msg("Object Properties"),
             Tab::AddObject => EmojiMessage::add_msg("Add Object"),
+            // Tab::NodeTree => EmojiMessage::folder_msg("Node Tree"),
         }
         .into()
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
+        let file_open = self.editor.io_context.file_open;
+
         match tab {
             Tab::Canvas => {
-                if self.editor.io_context.file_open {
+                if file_open {
                     self.editor.show_canvas(ui);
                 } else {
                     ui.centered_and_justified(|ui| ui.label("No file open."));
@@ -111,7 +116,13 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
             Tab::AddObject => {
                 ui.label("blah blah");
-            }
+            } // Tab::NodeTree => {
+              //     if file_open {
+              //         self.editor.show_node_tree(ui);
+              //     } else {
+              //         ui.centered_and_justified(|ui| ui.label("No file open."));
+              //     }
+              // }
         }
     }
 }
@@ -183,6 +194,10 @@ impl LevelEditor {
                 if ui.button(EmojiMessage::add_msg("Add Object")).clicked() {
                     self.open_tab(Tab::AddObject)
                 }
+
+                // if ui.button(EmojiMessage::folder_msg("Node Tree")).clicked() {
+                //     self.open_tab(Tab::NodeTree)
+                // }
             });
         });
 

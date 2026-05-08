@@ -1,47 +1,37 @@
 pub struct EmojiMessage;
 
+macro_rules! emoji_msg {
+    // both standalone and message
+    ($name:ident, $emoji:expr, both) => {
+        pub fn $name() -> &'static str {
+            $emoji
+        }
+        paste::paste! {
+            pub fn [<$name _msg>](msg: &str) -> String { format!("{} {}", $emoji, msg) }
+        }
+    };
+    // standalone only
+    ($name:ident, $emoji:expr, icon) => {
+        pub fn $name() -> &'static str {
+            $emoji
+        }
+    };
+    // message only
+    ($name:ident, $emoji:expr, message) => {
+        paste::paste! {
+            pub fn [<$name _msg>](msg: &str) -> String { format!("{} {}", $emoji, msg) }
+        }
+    };
+}
+
 impl EmojiMessage {
-    pub fn add_msg(msg: &str) -> String {
-        format!("➕ {msg}")
-    }
-
-    pub fn check_msg(msg: &str) -> String {
-        format!("✔️ {msg}")
-    }
-
-    pub fn cross_msg(msg: &str) -> String {
-        format!("❌ {msg}")
-    }
-
-    pub fn discard() -> &'static str {
-        "🗑"
-    }
-
-    // pub fn discard_msg(msg: &str) -> String {
-    //     format!("🗑 {msg}")
-    // }
-
-    pub fn memo_msg(msg: &str) -> String {
-        format!("📝 {msg}")
-    }
-
-    pub fn palette_msg(msg: &str) -> String {
-        format!("🎨 {msg}")
-    }
-
-    // pub fn settings_msg(msg: &str) -> String {
-    //     format!("⚙️ {msg}")
-    // }
-
-    pub fn target() -> &'static str {
-        "🎯"
-    }
-
-    pub fn target_msg(msg: &str) -> String {
-        format!("🎯 {msg}")
-    }
-
-    pub fn warning_msg(msg: &str) -> String {
-        format!("⚠ {msg}")
-    }
+    emoji_msg!(add, "➕", message);
+    emoji_msg!(check, "✔️", message);
+    emoji_msg!(cross, "❌", message);
+    emoji_msg!(discard, "🗑", icon);
+    // emoji_msg!(folder, "📁", message);
+    emoji_msg!(memo, "📝", message);
+    emoji_msg!(palette, "🎨", message);
+    emoji_msg!(target, "🎯", both);
+    emoji_msg!(warning, "⚠", message);
 }

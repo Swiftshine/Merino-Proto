@@ -19,3 +19,4 @@
 - [ ] little endian (3DS) support
 - [ ] object image renders
 - [x] docking
+- [ ] node tree
