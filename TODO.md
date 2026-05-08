@@ -27,7 +27,7 @@
     - [ ] MapCircle
     - [ ] MapTerrain
     - [ ] toggles for all of the above
-    - [ ] handle sub-nodes
+    - [x] handle sub-nodes
         - [x] add
         - [x] remove
         - [x] turn existing node into child
