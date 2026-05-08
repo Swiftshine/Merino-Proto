@@ -4,9 +4,31 @@
 
 - [x] Level parsing
 - [ ] Level viewing
+    - [ ] MapSet
+    - [x] MapPolySet
+    - [x] MapObjSet
+    - [ ] MapItemSet
+    - [ ] MapEnemySet
+    - [ ] MapLocator
+    - [ ] MapPath
+    - [ ] MapRect
+    - [ ] MapCircle
+    - [ ] MapTerrain
+    - [ ] toggles for all of the above
 - [ ] Level editing
-    - [ ] handle sub-nodes
-    - [x] Parameter Parsing
+    - [ ] MapSet
+    - [ ] MapPolySet
+    - [x] MapObjSet
+    - [ ] MapItemSet
+    - [ ] MapEnemySet
+    - [ ] MapLocator
+    - [ ] MapPath
+    - [ ] MapRect
+    - [ ] MapCircle
+    - [ ] MapTerrain
+    - [ ] toggles for all of the above
+    - [x] handle sub-nodes
+    - [x] parameter parsing
     - [x] object addition
     - [ ] object removal
 - [x] Level saving
