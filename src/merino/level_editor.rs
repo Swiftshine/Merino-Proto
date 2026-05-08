@@ -70,11 +70,10 @@ impl AddTarget {
     }
 
     pub fn get_type(&self) -> NodeChildType {
-        match self {
+        *match self {
             Self::ToRoot(child_type) => child_type,
             Self::ToNode(child_type, ..) => child_type,
         }
-        .clone()
     }
 
     pub fn to_string(&self) -> String {
@@ -108,7 +107,7 @@ impl FileContext {
 
         for (child_type, index) in path {
             node = node
-                .children_of_type_vec_mut(child_type.clone())?
+                .children_of_type_vec_mut(*child_type)?
                 .get_mut(*index)?;
         }
 
@@ -306,7 +305,7 @@ impl LevelEditor {
             .dock_state
             .main_surface()
             .iter()
-            .any(|node| node.tabs().map_or(false, |tabs| tabs.contains(&tab)))
+            .any(|node| node.tabs().is_some_and(|tabs| tabs.contains(&tab)))
         {
             self.dock_state.main_surface_mut().push_to_focused_leaf(tab);
         }

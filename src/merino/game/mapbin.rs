@@ -240,16 +240,16 @@ impl NodeData {
             unk3: 0.0,
             unk4: Default::default(),
             unk5: Default::default(),
-            unk6: (version >= 4.43).then(|| 0),
-            unk7: (version >= 4.44).then(|| String32::default()),
+            unk6: (version >= 4.43).then_some(0),
+            unk7: (version >= 4.44).then(String32::default),
             unk8: Default::default(),
             unk9: Default::default(),
-            unk10: (version >= 4.71).then(|| 0),
-            unk11: (version >= 4.71).then(|| 0),
-            unk12: (version >= 4.71).then(|| 0),
-            unk13: (version >= 4.71).then(|| 0),
+            unk10: (version >= 4.71).then_some(0),
+            unk11: (version >= 4.71).then_some(0),
+            unk12: (version >= 4.71).then_some(0),
+            unk13: (version >= 4.71).then_some(0),
             params: Default::default(),
-            unk14: (version >= 4.50).then(|| Default::default()),
+            unk14: (version >= 4.50).then(Default::default),
         }
     }
 
@@ -601,10 +601,10 @@ impl Mapbin {
             NodeChildType::MapTerrain => &mut parent.children_mapterrain,
         };
 
-        if let Some(v) = vec {
-            if index < v.len() {
-                return Some(v.remove(index));
-            }
+        if let Some(v) = vec
+            && index < v.len()
+        {
+            return Some(v.remove(index));
         }
         None
     }

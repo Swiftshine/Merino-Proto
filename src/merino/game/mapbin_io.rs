@@ -92,9 +92,7 @@ impl MapDataNode {
                 unk4: reader.read_object::<Vec2f>()?,
                 unk5: reader.read_object::<String32>()?,
                 unk6: reader.read_at_version(4.43, |r| r.read_i32())?,
-                unk7: reader
-                    .read_at_version(4.44, |r| r.read_object::<String32>())?
-                    .map(Into::into),
+                unk7: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
                 unk8: reader.read_object::<Vec2f>()?,
                 unk9: reader.read_object::<Vec2f>()?,
                 unk10: reader.read_at_version(4.71, |r| r.read_i32())?,
@@ -144,9 +142,7 @@ impl MapDataNode {
                 unk9: reader
                     .read_below_version(4.43, |r| r.read_string(16))?
                     .map(Into::into),
-                unk10: reader
-                    .read_below_version(4.43, |r| r.read_object::<String32>())?
-                    .map(Into::into),
+                unk10: reader.read_below_version(4.43, |r| r.read_object::<String32>())?,
                 unk11: reader.read_below_version(4.43, |r| r.read_i32())?,
                 unk12: reader.read_below_version(4.43, |r| r.read_i32())?,
                 unk13: reader.read_i32()?,

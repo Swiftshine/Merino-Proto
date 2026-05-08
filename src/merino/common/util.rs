@@ -2,7 +2,7 @@ use std::{env, fs, path::PathBuf};
 
 use anyhow::{Context, Result};
 
-const MERINO_FOLDER: &'static str = "merino_res";
+const MERINO_FOLDER: &str = "merino_res";
 
 pub fn get_merino_folder_path() -> Result<PathBuf> {
     let base_path = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {

@@ -28,15 +28,14 @@ impl LevelEditor {
         ui.label(egui::RichText::new("Properties").strong());
         egui::ScrollArea::vertical()
             .max_height(400.0)
-            .show(ui, |ui| match node.node_type {
-                MapNodeType::MapObjSet => {
+            .show(ui, |ui| {
+                if node.node_type == MapNodeType::MapObjSet {
                     Self::edit_mapobjset_properties(
                         ui,
                         object_property_editor_context,
                         &mut node.node_data,
                     );
                 }
-                _ => {}
             });
 
         // view children
@@ -155,7 +154,7 @@ impl LevelEditor {
 
             // check if the node being deleted has its own children
             let has_children = mapdata
-                .get_node_at_path(&path)
+                .get_node_at_path(path)
                 .map(|n| n.has_children())
                 .unwrap_or(false);
 

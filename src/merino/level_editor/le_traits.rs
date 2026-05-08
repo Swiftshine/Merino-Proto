@@ -152,20 +152,16 @@ impl<const N: usize> Editable for Params<N> {
                             }
 
                             ParameterDataType::DropdownInt => {
-                                if let Some(options) = &param.dropdown_options {
-                                    if let Some(val) = self.int_values.get_mut(param.slot) {
-                                        egui::ComboBox::from_label("Value")
-                                            .selected_text(&options[*val as usize].key)
-                                            .show_ui(ui, |ui| {
-                                                for option in options.iter() {
-                                                    ui.selectable_value(
-                                                        val,
-                                                        option.value,
-                                                        &option.key,
-                                                    );
-                                                }
-                                            });
-                                    }
+                                if let Some(options) = &param.dropdown_options
+                                    && let Some(val) = self.int_values.get_mut(param.slot)
+                                {
+                                    egui::ComboBox::from_label("Value")
+                                        .selected_text(&options[*val as usize].key)
+                                        .show_ui(ui, |ui| {
+                                            for option in options.iter() {
+                                                ui.selectable_value(val, option.value, &option.key);
+                                            }
+                                        });
                                 }
                             }
                             _ => {}

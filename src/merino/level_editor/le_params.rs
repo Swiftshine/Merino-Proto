@@ -86,7 +86,7 @@ impl LevelEditor {
 
             let objects = set_object.iter().map(|(obj_name, props)| {
                 let mut param_object = ParameterObject::default();
-                param_object.set_type = set_type.clone();
+                param_object.set_type = set_type;
                 param_object.name = obj_name.to_owned();
                 param_object.description = props["description"].as_str().map(String::from);
                 param_object.display_name = props["display_name"].as_str().map(String::from);

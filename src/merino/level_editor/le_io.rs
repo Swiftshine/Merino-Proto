@@ -9,7 +9,7 @@ use crate::merino::{
 use anyhow::{Context, Result};
 use rfd::FileDialog;
 
-const OBJECTDATA_FILE: &'static str = "objectdata.json";
+const OBJECTDATA_FILE: &str = "objectdata.json";
 
 impl LevelEditor {
     pub fn open_file(&mut self) -> Result<()> {
