@@ -7,7 +7,7 @@
 - [ ] Level editing
     - [ ] handle sub-nodes
     - [x] Parameter Parsing
-    - [ ] object addition
+    - [x] object addition
     - [ ] object removal
 - [x] Level saving
 
