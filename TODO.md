@@ -42,3 +42,4 @@
 - [ ] object image renders
 - [x] docking
 - [ ] node tree
+- [ ] download objectdata
