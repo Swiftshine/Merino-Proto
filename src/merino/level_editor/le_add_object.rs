@@ -74,6 +74,8 @@ impl LevelEditor {
         if ui.ctx().input(|i| i.pointer.primary_released())
             && let Some(pointer_pos) = response.hover_pos()
         {
+            // offset to make it align with the mouse
+            let local_pos = (pointer_pos - response.rect.min).to_pos2();
             let version = file_context.mapdata.version;
 
             match &add_target {
@@ -82,7 +84,7 @@ impl LevelEditor {
                         version,
                         &mut file_context.mapdata.root,
                         *child_type,
-                        pointer_pos,
+                        local_pos,
                         canvas_context,
                     );
                     placed = true;
@@ -94,7 +96,7 @@ impl LevelEditor {
                             version,
                             node,
                             *child_type,
-                            pointer_pos,
+                            local_pos,
                             canvas_context,
                         );
                         placed = true;
