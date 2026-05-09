@@ -201,7 +201,7 @@ struct MapSetNode {
         f32 m_MC_Radius;
         Params<3> m_MC_Params;
     } else if (mType == MapNodeType::MapTerrain) {
-        s32 m_MT_Name;
+        s32 m_MT_NameIndex;
         Vec3f m_MT_Position;
 
         if (gVersion >= 4.43f) {
