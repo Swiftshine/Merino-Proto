@@ -65,18 +65,6 @@ impl MapDataNode {
                 );
             }
 
-            MapNodeType::MapRect => {
-                self.edit_rect_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::from_rgb(0xC8, 0x74, 0xD9),
-                );
-            }
-
             MapNodeType::MapObjSet => {
                 self.edit_point_node(
                     ui,
@@ -103,6 +91,19 @@ impl MapDataNode {
                 );
             }
 
+            MapNodeType::MapEnemySet => {
+                self.edit_point_node(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::LIGHT_RED,
+                    false,
+                );
+            }
+
             MapNodeType::MapLocator => {
                 self.edit_point_node(
                     ui,
@@ -116,16 +117,27 @@ impl MapDataNode {
                 );
             }
 
-            MapNodeType::MapEnemySet => {
-                self.edit_point_node(
+            MapNodeType::MapPath => {
+                self.edit_mappath(
                     ui,
                     canvas_rect,
                     current_path,
                     commands,
                     canvas_context,
                     do_edit,
-                    egui::Color32::LIGHT_RED,
-                    false,
+                    egui::Color32::DARK_BLUE,
+                );
+            }
+
+            MapNodeType::MapRect => {
+                self.edit_rect_node(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::from_rgb(0xC8, 0x74, 0xD9),
                 );
             }
 
@@ -153,7 +165,6 @@ impl MapDataNode {
                     false,
                 );
             }
-            _ => {}
         }
 
         for (branch, index, child) in self.all_children_mut() {
@@ -426,6 +437,78 @@ impl MapDataNode {
         }
     }
 
+    fn edit_mappath(
+        &mut self,
+        ui: &mut egui::Ui,
+        canvas_rect: egui::Rect,
+        current_path: &mut NodePath,
+        commands: &mut Vec<EditorCommand>,
+        canvas_context: &mut CanvasContext,
+        do_edit: bool,
+        mut color: egui::Color32,
+    ) {
+        let NodeData::MapPath { points, .. } = &mut self.node_data else {
+            return;
+        };
+
+        if points.is_empty() {
+            return;
+        }
+
+        let painter = ui.painter_at(canvas_rect);
+
+        let screen_points: Vec<egui::Pos2> = points
+            .iter()
+            .map(|point| canvas_rect.min + canvas_context.camera.convert_to_camera((*point).into()))
+            .collect();
+
+        // draw lines
+        for window in screen_points.windows(2) {
+            painter.line_segment([window[0], window[1]], egui::Stroke::new(1.0, color));
+        }
+
+        let selected = Self::is_selected(current_path, canvas_context);
+
+        if selected {
+            color = egui::Color32::LIGHT_RED;
+        }
+
+        if !do_edit {
+            return;
+        }
+
+        let mut any_clicked = false;
+
+        for (index, point) in points.iter_mut().enumerate() {
+            let screen_point = screen_points[index];
+
+            let handle_rect =
+                Self::make_handle_rect(screen_point, SMALL_SQUARE_SIZE, canvas_context);
+
+            let response = ui.interact(
+                canvas_rect.intersect(handle_rect),
+                egui::Id::new(&mut *current_path).with(index),
+                egui::Sense::click_and_drag(),
+            );
+
+            if response.clicked() {
+                any_clicked = true;
+            }
+
+            if response.dragged_by(egui::PointerButton::Primary) {
+                Self::drag_vec2f(point, &response, canvas_context);
+            }
+
+            painter.rect_filled(handle_rect, 0.0, color);
+
+            if selected {
+                painter.rect_filled(handle_rect, 0.0, SELECTION_HIGHLIGHT);
+            }
+        }
+
+        Self::handle_selection(current_path, any_clicked, commands, canvas_context);
+    }
+
     fn edit_mapcircle(
         &mut self,
         ui: &mut egui::Ui,
@@ -542,9 +625,9 @@ impl MapDataNode {
         }
     }
 
-    // fn is_selected(current_path: &NodePath, canvas_context: &CanvasContext) -> bool {
-    //     canvas_context.selected_node_paths.contains(current_path)
-    // }
+    fn is_selected(current_path: &NodePath, canvas_context: &CanvasContext) -> bool {
+        canvas_context.selected_node_paths.contains(current_path)
+    }
 
     fn handle_selection(
         current_path: &NodePath,
