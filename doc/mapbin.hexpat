@@ -201,37 +201,35 @@ struct MapSetNode {
         f32 m_MC_Radius;
         Params<3> m_MC_Params;
     } else if (mType == MapNodeType::MapTerrain) {
-        s32 m_MT_unk1;
-        f32 m_MT_unk2;
-        f32 m_MT_unk3;
-        f32 m_MT_unk4;
+        s32 m_MT_Name;
+        Vec3f m_MT_Position;
 
         if (gVersion >= 4.43f) {
-            s32 m_MT_unk5;
+            s32 m_MT_unk3;
         }
 
         if (gVersion >= 4.44f) {
-            String32 m_MT_unk6;
+            String32 m_MT_unk4;
         }
 
+        f32 m_MT_unk5;
+        f32 m_MT_unk6;
         f32 m_MT_unk7;
         f32 m_MT_unk8;
-        f32 m_MT_unk9;
-        f32 m_MT_unk10;
 
         if (gVersion >= 4.71f) {
+            s32 m_MT_unk9;
+            s32 m_MT_unk10;
             s32 m_MT_unk11;
             s32 m_MT_unk12;
-            s32 m_MT_unk13;
-            s32 m_MT_unk14;
         }
 
-        VarArray<std::Array<Vec2f, 3>> m_MT_unk15;
+        VarArray<std::Array<Vec2f, 3>> m_MT_unk13;
 
         Params<3> m_MT_Params;
 
         if (gVersion >= 4.6f) {
-            std::Array<std::Array<String32, 2>, 3> m_MT_unk16;
+            std::Array<std::Array<String32, 2>, 3> m_MT_unk15;
         }
     }
 
