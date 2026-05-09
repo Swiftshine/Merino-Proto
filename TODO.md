@@ -10,10 +10,12 @@
     - [x] MapItemSet
     - [x] MapEnemySet
     - [x] MapLocator
-    - [ ] MapPath
+    - [x] MapPath
+        - haven't actually seen any of these in the wild yet
     - [x] MapRect
     - [x] MapCircle
-    - [ ] MapTerrain
+        - nor have i seen this
+    - [x] MapTerrain
     - [x] toggles for all of the above
 - [ ] Level editing
     - [ ] MapSet
