@@ -125,7 +125,7 @@ impl MapDataNode {
                     commands,
                     canvas_context,
                     do_edit,
-                    egui::Color32::DARK_BLUE,
+                    egui::Color32::BLUE,
                 );
             }
 
@@ -327,7 +327,7 @@ impl MapDataNode {
         let end_resp = Self::interact_handle(ui, canvas_rect, end_handle, current_path, "end");
 
         if canvas_context.selected_node_paths.contains(&current_path) {
-            color = egui::Color32::RED;
+            color = egui::Color32::LIGHT_RED;
         }
 
         painter.rect_filled(start_handle, 0.3, color);
@@ -565,7 +565,7 @@ impl MapDataNode {
         );
 
         if canvas_context.selected_node_paths.contains(current_path) {
-            color = egui::Color32::RED;
+            color = egui::Color32::LIGHT_RED;
         }
 
         painter.rect_filled(center_handle, 0.0, color);

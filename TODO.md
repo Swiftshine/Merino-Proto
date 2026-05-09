@@ -24,7 +24,8 @@
     - [x] MapItemSet
     - [x] MapEnemySet
     - [x] MapLocator
-    - [x] MapPath
+    - [ ] MapPath
+        - [ ] extend existing path
     - [x] MapRect
     - [x] MapCircle
     - [x] MapTerrain
