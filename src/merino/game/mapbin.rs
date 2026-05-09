@@ -195,7 +195,7 @@ pub enum NodeData {
     },
 
     MapTerrain {
-        terrain_type: String32,
+        collision_type: String32,
         position: Vec3f,
         unk3: Option<i32>,      // version >= 4.43
         unk4: Option<String32>, // version >= 4.44
@@ -214,25 +214,25 @@ pub enum NodeData {
 }
 
 impl NodeData {
-    // pub fn default_map_set() -> Self {
+    // pub fn default_mapset(version: f32) -> Self {
     //     Self::MapSet {
-    //         unk1: None,
+    //         unk1: (version >= 4.70).then_some(0),
     //         bounds_start: Default::default(),
     //         bounds_end: Default::default(),
     //     }
     // }
 
-    // pub fn default_map_poly_set() -> Self {
-    //     Self::MapPolySet {
-    //         start: Default::default(),
-    //         end: Default::default(),
-    //         unk1: Default::default(),
-    //         collision_type: Default::default(),
-    //         unk3: 0,
-    //     }
-    // }
+    pub fn default_mappolyset() -> Self {
+        Self::MapPolySet {
+            start: Default::default(),
+            end: Default::default(),
+            collision_normal: Default::default(),
+            collision_type: Default::default(),
+            unk3: 0,
+        }
+    }
 
-    pub fn default_map_obj_set(version: f32) -> Self {
+    pub fn default_mapobjset(version: f32) -> Self {
         Self::MapObjSet {
             name: Default::default(),
             position: Default::default(),
@@ -252,108 +252,106 @@ impl NodeData {
         }
     }
 
-    // pub fn default_map_item_set() -> Self {
-    //     Self::MapItemSet {
-    //         name: Default::default(),
-    //         unk2: Default::default(),
-    //         unk3: Default::default(),
-    //         unk4: Default::default(),
-    //         unk5: Default::default(),
-    //         unk6: None,
-    //         unk7: None,
-    //         unk8: Default::default(),
-    //         unk9: Default::default(),
-    //         unk10: None,
-    //         unk11: None,
-    //         unk12: None,
-    //         unk13: None,
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_mapitemset(version: f32) -> Self {
+        Self::MapItemSet {
+            name: Default::default(),
+            position: Default::default(),
+            unk3: 0.0,
+            unk4: Default::default(),
+            unk5: Default::default(),
+            unk6: (version >= 4.43).then_some(0),
+            unk7: (version >= 4.44).then(String32::default),
+            unk8: Default::default(),
+            unk9: Default::default(),
+            unk10: (version >= 4.71).then_some(0),
+            unk11: (version >= 4.71).then_some(0),
+            unk12: (version >= 4.71).then_some(0),
+            unk13: (version >= 4.71).then_some(0),
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_enemy_set() -> Self {
-    //     Self::MapEnemySet {
-    //         name: Default::default(),
-    //         direction: Default::default(),
-    //         orientation: Default::default(),
-    //         position: Default::default(),
-    //         unk7: None,
-    //         unk8: None,
-    //         unk9: None,
-    //         unk10: None,
-    //         unk11: None,
-    //         unk12: None,
-    //         unk13: 0,
-    //         unk14: None,
-    //         unk15: None,
-    //         unk16: 0.0,
-    //         unk17: 0.0,
-    //         unk18: 0.0,
-    //         unk19: 0.0,
-    //         unk20: None,
-    //         unk21: None,
-    //         unk22: None,
-    //         unk23: None,
-    //         unk24: None,
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_mapenemyset(version: f32) -> Self {
+        Self::MapEnemySet {
+            name: Default::default(),
+            direction: Default::default(),
+            orientation: Default::default(),
+            position: Default::default(),
+            unk7: (version >= 4.45).then(String32::default),
+            unk8: (version < 4.43).then(String16::default),
+            unk9: (version < 4.43).then(String16::default),
+            unk10: (version < 4.43).then(String32::default),
+            unk11: (version < 4.43).then_some(0),
+            unk12: (version < 4.43).then_some(0),
+            unk13: 0,
+            unk14: (version >= 4.42).then_some(0),
+            unk15: (version >= 4.44).then(String32::default),
+            unk16: 0.0,
+            unk17: 0.0,
+            unk18: 0.0,
+            unk19: 0.0,
+            unk20: (version >= 4.71).then_some(0),
+            unk21: (version >= 4.71).then_some(0),
+            unk22: (version >= 4.71).then_some(0),
+            unk23: (version >= 4.71).then_some(0),
+            unk24: (version >= 4.72).then_some(0),
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_locator() -> Self {
-    //     Self::MapLocator {
-    //         name: Default::default(),
-    //         position: Default::default(),
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_maplocator() -> Self {
+        Self::MapLocator {
+            name: Default::default(),
+            position: Default::default(),
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_path() -> Self {
-    //     Self::MapPath {
-    //         name: Default::default(),
-    //         points: Default::default(),
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_mappath() -> Self {
+        Self::MapPath {
+            name: Default::default(),
+            points: Default::default(),
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_rect() -> Self {
-    //     Self::MapRect {
-    //         name: Default::default(),
-    //         bounds_start: Default::default(),
-    //         bounds_end: Default::default(),
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_maprect() -> Self {
+        Self::MapRect {
+            name: Default::default(),
+            bounds_start: Default::default(),
+            bounds_end: Default::default(),
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_circle() -> Self {
-    //     Self::MapCircle {
-    //         name: Default::default(),
-    //         position: Default::default(),
-    //         radius: 0.0,
-    //         params: Default::default(),
-    //     }
-    // }
+    pub fn default_mapcircle() -> Self {
+        Self::MapCircle {
+            name: Default::default(),
+            position: Default::default(),
+            radius: 0.0,
+            params: Default::default(),
+        }
+    }
 
-    // pub fn default_map_terrain() -> Self {
-    //     Self::MapTerrain {
-    //         collision_type: Default::default(),
-    //         unk2: 0.0,
-    //         unk3: 0.0,
-    //         unk4: 0.0,
-    //         unk5: None,
-    //         unk6: None,
-    //         unk7: 0.0,
-    //         unk8: 0.0,
-    //         unk9: 0.0,
-    //         unk10: 0.0,
-    //         unk11: None,
-    //         unk12: None,
-    //         unk13: None,
-    //         unk14: None,
-    //         unk15: Default::default(),
-    //         params: Default::default(),
-    //         unk16: None,
-    //     }
-    // }
+    pub fn default_mapterrain(version: f32) -> Self {
+        Self::MapTerrain {
+            collision_type: Default::default(),
+            position: Default::default(),
+            unk3: (version >= 4.43).then_some(0),
+            unk4: (version >= 4.44).then(String32::default),
+            unk5: 0.0,
+            unk6: 0.0,
+            unk7: 0.0,
+            unk8: 0.0,
+            unk9: (version >= 4.71).then_some(0),
+            unk10: (version >= 4.71).then_some(0),
+            unk11: (version >= 4.71).then_some(0),
+            unk12: (version >= 4.71).then_some(0),
+            unk13: Default::default(),
+            params: Default::default(),
+            unk15: (version >= 4.6).then(Default::default),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -421,10 +419,7 @@ impl MapDataNode {
                     enemy_types.push(name.clone());
                 }
             }
-            NodeData::MapTerrain {
-                terrain_type: collision_type,
-                ..
-            } => {
+            NodeData::MapTerrain { collision_type, .. } => {
                 if !collision_types.contains(collision_type) {
                     collision_types.push(collision_type.clone());
                 }

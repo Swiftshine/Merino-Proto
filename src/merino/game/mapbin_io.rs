@@ -187,7 +187,7 @@ impl MapDataNode {
             },
 
             MapNodeType::MapTerrain => NodeData::MapTerrain {
-                terrain_type: reader.read_collision_type()?,
+                collision_type: reader.read_collision_type()?,
                 position: reader.read_object::<Vec3f>()?,
                 unk3: reader.read_at_version(4.43, |r| r.read_i32())?,
                 unk4: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,

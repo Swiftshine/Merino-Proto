@@ -3,7 +3,7 @@
 ## Things that are critical
 
 - [x] Level parsing
-- [ ] Level viewing
+- [x] Level viewing
     - [x] MapSet
     - [x] MapPolySet
     - [x] MapObjSet
@@ -17,17 +17,17 @@
         - nor have i seen this
     - [x] MapTerrain
     - [x] toggles for all of the above
-- [ ] Level editing
-    - [ ] MapSet
-    - [ ] MapPolySet
+- [x] Level editing
+    - [x] MapSet
+    - [x] MapPolySet
     - [x] MapObjSet
-    - [ ] MapItemSet
-    - [ ] MapEnemySet
-    - [ ] MapLocator
-    - [ ] MapPath
-    - [ ] MapRect
-    - [ ] MapCircle
-    - [ ] MapTerrain
+    - [x] MapItemSet
+    - [x] MapEnemySet
+    - [x] MapLocator
+    - [x] MapPath
+    - [x] MapRect
+    - [x] MapCircle
+    - [x] MapTerrain
     - [x] toggles for all of the above
     - [x] handle sub-nodes
         - [x] add

@@ -302,7 +302,7 @@ impl Writer {
             }
 
             NodeData::MapTerrain {
-                terrain_type: collision_type,
+                collision_type,
                 position,
                 unk3,
                 unk4,

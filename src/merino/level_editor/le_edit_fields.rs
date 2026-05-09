@@ -342,14 +342,14 @@ impl LevelEditor {
         if let NodeData::MapPolySet {
             start,
             end,
-            collision_normal,
             collision_type,
             unk3,
+            ..
         } = node_data
         {
+            // not allowing the user to edit the collision normal because that is to be automatically calculated
             start.edit_properties(ui, EditInfo::label("Start"));
             end.edit_properties(ui, EditInfo::label("End"));
-            collision_normal.edit_properties(ui, EditInfo::label("Collision Normal"));
             collision_type.edit_properties(ui, EditInfo::label("Collision Type"));
             unk3.edit_properties(ui, EditInfo::label("Unk 3"));
         }
@@ -578,7 +578,7 @@ impl LevelEditor {
         node_data: &mut NodeData,
     ) {
         if let NodeData::MapTerrain {
-            terrain_type,
+            collision_type,
             position,
             unk3,
             unk4,
@@ -595,7 +595,7 @@ impl LevelEditor {
             unk15,
         } = node_data
         {
-            terrain_type.edit_properties(ui, EditInfo::label("Terrain Type"));
+            collision_type.edit_properties(ui, EditInfo::label("Terrain Type"));
             position.edit_properties(ui, EditInfo::label("Position"));
 
             unk3.edit_properties(ui, EditInfo::label("Unk 3"));
@@ -616,7 +616,7 @@ impl LevelEditor {
                 EditInfo::search_param(
                     &context.parameter_objects,
                     MapNodeType::MapTerrain,
-                    terrain_type.as_str(),
+                    collision_type.as_str(),
                 ),
             );
         }

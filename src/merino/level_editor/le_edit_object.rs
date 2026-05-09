@@ -199,10 +199,10 @@ impl MapDataNode {
             NodeData::MapLocator { name, position, .. } => (name.as_str(), position),
 
             NodeData::MapTerrain {
-                terrain_type,
+                collision_type,
                 position,
                 ..
-            } => (terrain_type.as_str(), position),
+            } => (collision_type.as_str(), position),
 
             _ => return,
         };
