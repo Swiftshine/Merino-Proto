@@ -141,6 +141,18 @@ impl MapDataNode {
                 );
             }
 
+            MapNodeType::MapTerrain => {
+                self.edit_point_node(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::from_rgb(120, 220, 120),
+                    false,
+                );
+            }
             _ => {}
         }
 
@@ -172,6 +184,12 @@ impl MapDataNode {
             NodeData::MapItemSet { name, position, .. } => (name.as_str(), position),
 
             NodeData::MapEnemySet { name, position, .. } => (name.as_str(), position),
+
+            NodeData::MapTerrain {
+                terrain_type,
+                position,
+                ..
+            } => (terrain_type.as_str(), position),
 
             _ => return,
         };
