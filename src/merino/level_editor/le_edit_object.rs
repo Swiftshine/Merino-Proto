@@ -41,6 +41,18 @@ impl MapDataNode {
         let do_edit = canvas_context.can_edit(self.node_type);
 
         match self.node_type {
+            MapNodeType::MapSet => {
+                self.edit_rect_node(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::DARK_GREEN,
+                );
+            }
+
             MapNodeType::MapPolySet => {
                 self.edit_mappolyset(
                     ui,
@@ -54,7 +66,7 @@ impl MapDataNode {
             }
 
             MapNodeType::MapRect => {
-                self.edit_maprect(
+                self.edit_rect_node(
                     ui,
                     canvas_rect,
                     current_path,
@@ -75,6 +87,19 @@ impl MapDataNode {
                     do_edit,
                     egui::Color32::WHITE,
                     true,
+                );
+            }
+
+            MapNodeType::MapItemSet => {
+                self.edit_point_node(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::GOLD,
+                    false,
                 );
             }
 
@@ -104,6 +129,18 @@ impl MapDataNode {
                 );
             }
 
+            MapNodeType::MapCircle => {
+                self.edit_mapcircle(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    egui::Color32::LIGHT_GREEN,
+                );
+            }
+
             _ => {}
         }
 
@@ -115,6 +152,8 @@ impl MapDataNode {
             current_path.pop();
         }
     }
+
+    /* generic editors */
 
     fn edit_point_node(
         &mut self,
@@ -130,7 +169,7 @@ impl MapDataNode {
         let (name, position) = match &mut self.node_data {
             NodeData::MapObjSet { name, position, .. } => (name.as_str(), position),
 
-            NodeData::MapLocator { name, position, .. } => (name.as_str(), position),
+            NodeData::MapItemSet { name, position, .. } => (name.as_str(), position),
 
             NodeData::MapEnemySet { name, position, .. } => (name.as_str(), position),
 
@@ -214,7 +253,7 @@ impl MapDataNode {
         }
     }
 
-    fn edit_maprect(
+    fn edit_rect_node(
         &mut self,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
@@ -224,12 +263,7 @@ impl MapDataNode {
         do_edit: bool,
         mut color: egui::Color32,
     ) {
-        let NodeData::MapRect {
-            bounds_start,
-            bounds_end,
-            ..
-        } = &mut self.node_data
-        else {
+        let Some((bounds_start, bounds_end)) = self.rect_bounds_mut() else {
             return;
         };
 
@@ -323,6 +357,8 @@ impl MapDataNode {
             painter.rect_filled(rect, 0.0, SELECTION_HIGHLIGHT);
         }
     }
+
+    /* specific editors */
 
     fn edit_mappolyset(
         &mut self,
@@ -435,6 +471,122 @@ impl MapDataNode {
 
             collision_normal.x = -normalized.1;
             collision_normal.y = normalized.0;
+        }
+    }
+
+    fn edit_mapcircle(
+        &mut self,
+        ui: &mut egui::Ui,
+        canvas_rect: egui::Rect,
+        current_path: &mut NodePath,
+        commands: &mut Vec<EditorCommand>,
+        canvas_context: &mut CanvasContext,
+        do_edit: bool,
+        mut color: egui::Color32,
+    ) {
+        let NodeData::MapCircle {
+            position, radius, ..
+        } = &mut self.node_data
+        else {
+            return;
+        };
+
+        let painter = ui.painter_at(canvas_rect);
+
+        let center = canvas_rect.min + canvas_context.camera.convert_to_camera((*position).into());
+
+        let screen_radius = *radius * canvas_context.camera.zoom;
+
+        painter.circle_stroke(center, screen_radius, egui::Stroke::new(1.0, color));
+
+        if !do_edit {
+            return;
+        }
+
+        let center_handle = egui::Rect::from_center_size(
+            center,
+            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
+        );
+
+        let radius_handle_pos = egui::Pos2::new(center.x + screen_radius, center.y);
+
+        let radius_handle = egui::Rect::from_center_size(
+            radius_handle_pos,
+            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
+        );
+
+        let center_resp = ui.interact(
+            canvas_rect.intersect(center_handle),
+            egui::Id::new(&current_path).with("center"),
+            egui::Sense::click_and_drag(),
+        );
+
+        let radius_resp = ui.interact(
+            canvas_rect.intersect(radius_handle),
+            egui::Id::new(&current_path).with("radius"),
+            egui::Sense::click_and_drag(),
+        );
+
+        if canvas_context.selected_node_paths.contains(current_path) {
+            color = egui::Color32::RED;
+        }
+
+        painter.rect_filled(center_handle, 0.0, color);
+        painter.rect_filled(radius_handle, 0.0, color);
+
+        if center_resp.clicked() || radius_resp.clicked() {
+            if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
+                commands.push(EditorCommand::move_node(
+                    current_path.clone(),
+                    parent_path.clone(),
+                ));
+            } else {
+                canvas_context
+                    .selected_node_paths
+                    .push(current_path.clone());
+            }
+        }
+
+        if center_resp.dragged_by(egui::PointerButton::Primary) {
+            let world_delta = center_resp.drag_delta() / canvas_context.camera.zoom;
+
+            position.x += world_delta.x;
+            position.y -= world_delta.y;
+        }
+
+        if radius_resp.dragged_by(egui::PointerButton::Primary) {
+            let pointer = ui.input(|i| i.pointer.hover_pos());
+
+            if let Some(pointer) = pointer {
+                let dx = pointer.x - center.x;
+                let dy = pointer.y - center.y;
+
+                *radius = (dx * dx + dy * dy).sqrt() / canvas_context.camera.zoom;
+            }
+        }
+
+        if canvas_context.selected_node_paths.contains(current_path) {
+            painter.circle_filled(center, screen_radius, SELECTION_HIGHLIGHT);
+        }
+    }
+
+    /* helpers */
+
+    fn rect_bounds_mut(&mut self) -> Option<(&mut Vec2f, &mut Vec2f)> {
+        match &mut self.node_data {
+            NodeData::MapRect {
+                bounds_start,
+                bounds_end,
+                ..
+            } => Some((bounds_start, bounds_end)),
+
+            NodeData::MapSet {
+                bounds_start,
+                bounds_end,
+                ..
+            } => Some((bounds_start, bounds_end)),
+
+            _ => None,
         }
     }
 }
