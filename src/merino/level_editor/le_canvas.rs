@@ -77,8 +77,12 @@ impl LevelEditor {
                 ui.label(node_type.to_string());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        changed |= ui.checkbox(&mut settings.editable, "Editable").changed();
-
+                        changed |= ui
+                            .add_enabled(
+                                settings.visible,
+                                egui::Checkbox::new(&mut settings.editable, "Editable"),
+                            )
+                            .changed();
                         changed |= ui.checkbox(&mut settings.visible, "Visible").changed();
                     });
                 });
