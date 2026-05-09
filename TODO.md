@@ -4,15 +4,15 @@
 
 - [x] Level parsing
 - [ ] Level viewing
-    - [ ] MapSet
+    - [x] MapSet
     - [x] MapPolySet
     - [x] MapObjSet
-    - [ ] MapItemSet
-    - [ ] MapEnemySet
-    - [ ] MapLocator
+    - [x] MapItemSet
+    - [x] MapEnemySet
+    - [x] MapLocator
     - [ ] MapPath
-    - [ ] MapRect
-    - [ ] MapCircle
+    - [x] MapRect
+    - [x] MapCircle
     - [ ] MapTerrain
     - [x] toggles for all of the above
 - [ ] Level editing
