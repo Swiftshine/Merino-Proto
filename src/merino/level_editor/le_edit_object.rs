@@ -189,9 +189,10 @@ impl MapDataNode {
                 .camera
                 .convert_to_camera(Vec2f::from(*position).into());
 
-        let square = egui::Rect::from_center_size(
+        let square = Self::make_handle_rect(
             egui::Pos2::new(screen_pos.x, screen_pos.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SQUARE_SIZE * canvas_context.camera.zoom),
+            SQUARE_SIZE,
+            canvas_context,
         );
 
         painter.rect_stroke(
@@ -211,22 +212,15 @@ impl MapDataNode {
             egui::Sense::click_and_drag(),
         );
 
-        if response.clicked_by(egui::PointerButton::Primary) {
-            if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
-                commands.push(EditorCommand::move_node(
-                    current_path.clone(),
-                    parent_path.clone(),
-                ));
-            } else {
-                canvas_context
-                    .selected_node_paths
-                    .push(current_path.clone());
-            }
-        } else if response.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = response.drag_delta() / canvas_context.camera.zoom;
+        Self::handle_selection(current_path, response.clicked(), commands, canvas_context);
 
-            position.x += world_delta.x;
-            position.y -= world_delta.y;
+        if response.dragged_by(egui::PointerButton::Primary) {
+            let mut pos2 = Vec2f::from(*position);
+
+            Self::drag_vec2f(&mut pos2, &response, canvas_context);
+
+            position.x = pos2.x;
+            position.y = pos2.y;
         }
 
         let selected = canvas_context.selected_node_paths.contains(current_path);
@@ -292,27 +286,14 @@ impl MapDataNode {
         let end_screen =
             canvas_rect.min + canvas_context.camera.convert_to_camera(bounds_end.into());
 
-        let start_handle = egui::Rect::from_center_size(
-            start_screen,
-            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
-        );
+        let start_handle = Self::make_handle_rect(start_screen, SMALL_SQUARE_SIZE, canvas_context);
 
-        let end_handle = egui::Rect::from_center_size(
-            end_screen,
-            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
-        );
+        let end_handle = Self::make_handle_rect(end_screen, SMALL_SQUARE_SIZE, canvas_context);
 
-        let start_resp = ui.interact(
-            canvas_rect.intersect(start_handle),
-            egui::Id::new(&current_path).with("start"),
-            egui::Sense::click_and_drag(),
-        );
+        let start_resp =
+            Self::interact_handle(ui, canvas_rect, start_handle, current_path, "start");
 
-        let end_resp = ui.interact(
-            canvas_rect.intersect(end_handle),
-            egui::Id::new(&current_path).with("end"),
-            egui::Sense::click_and_drag(),
-        );
+        let end_resp = Self::interact_handle(ui, canvas_rect, end_handle, current_path, "end");
 
         if canvas_context.selected_node_paths.contains(&current_path) {
             color = egui::Color32::RED;
@@ -323,32 +304,19 @@ impl MapDataNode {
 
         let responses = [&start_resp, &end_resp];
 
-        if responses
-            .iter()
-            .any(|r| r.clicked_by(egui::PointerButton::Primary))
-        {
-            if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
-                commands.push(EditorCommand::move_node(
-                    current_path.clone(),
-                    parent_path.clone(),
-                ));
-            } else {
-                canvas_context
-                    .selected_node_paths
-                    .push(current_path.clone());
-            }
-        }
+        Self::handle_selection(
+            current_path,
+            responses.iter().any(|r| r.clicked()),
+            commands,
+            canvas_context,
+        );
 
         if start_resp.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = start_resp.drag_delta() / canvas_context.camera.zoom;
-            bounds_start.x += world_delta.x;
-            bounds_start.y -= world_delta.y;
+            Self::drag_vec2f(bounds_start, &start_resp, canvas_context);
         }
 
         if end_resp.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = end_resp.drag_delta() / canvas_context.camera.zoom;
-            bounds_end.x += world_delta.x;
-            bounds_end.y -= world_delta.y;
+            Self::drag_vec2f(bounds_end, &end_resp, canvas_context);
         }
 
         let selected = canvas_context.selected_node_paths.contains(current_path);
@@ -392,27 +360,13 @@ impl MapDataNode {
             return;
         }
 
-        let start_rect = egui::Rect::from_center_size(
-            egui::Pos2::new(draw_start.x, draw_start.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
-        );
+        let start_rect = Self::make_handle_rect(draw_start, SMALL_SQUARE_SIZE, canvas_context);
 
-        let end_rect = egui::Rect::from_center_size(
-            egui::Pos2::new(draw_end.x, draw_end.y - SQUARE_SIZE * 2.0),
-            egui::Vec2::splat(SMALL_SQUARE_SIZE * canvas_context.camera.zoom),
-        );
+        let end_rect = Self::make_handle_rect(draw_end, SMALL_SQUARE_SIZE, canvas_context);
 
-        let start_resp = ui.interact(
-            canvas_rect.intersect(start_rect),
-            egui::Id::new(&current_path).with("start"),
-            egui::Sense::click_and_drag(),
-        );
+        let start_resp = Self::interact_handle(ui, canvas_rect, start_rect, current_path, "start");
 
-        let end_resp = ui.interact(
-            canvas_rect.intersect(end_rect),
-            egui::Id::new(&current_path).with("end"),
-            egui::Sense::click_and_drag(),
-        );
+        let end_resp = Self::interact_handle(ui, canvas_rect, end_rect, current_path, "end");
 
         if canvas_context.selected_node_paths.contains(&current_path) {
             color = egui::Color32::LIGHT_RED;
@@ -423,42 +377,22 @@ impl MapDataNode {
 
         let responses = [&start_resp, &end_resp];
 
-        if responses
-            .iter()
-            .any(|resp| resp.clicked_by(egui::PointerButton::Primary))
-        {
-            if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
-                // todo! make all selected nodes a child of the new parent
-                // but for now we're just going to work with clicking on this one
-                commands.push(EditorCommand::move_node(
-                    current_path.clone(),
-                    parent_path.clone(),
-                ));
-            } else {
-                // not being looked for, just select
-                canvas_context
-                    .selected_node_paths
-                    .push(current_path.clone());
-            }
-        }
+        Self::handle_selection(
+            current_path,
+            responses.iter().any(|r| r.clicked()),
+            commands,
+            canvas_context,
+        );
 
         let mut dragged = false;
 
         if start_resp.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = start_resp.drag_delta() / canvas_context.camera.zoom;
-
-            start.x += world_delta.x;
-            start.y -= world_delta.y;
-
+            Self::drag_vec2f(start, &start_resp, canvas_context);
             dragged = true;
         }
 
         if end_resp.dragged_by(egui::PointerButton::Primary) {
-            let world_delta = end_resp.drag_delta() / canvas_context.camera.zoom;
-
-            end.x += world_delta.x;
-            end.y -= world_delta.y;
-
+            Self::drag_vec2f(end, &end_resp, canvas_context);
             dragged = true;
         }
 
@@ -588,5 +522,67 @@ impl MapDataNode {
 
             _ => None,
         }
+    }
+
+    // fn is_selected(current_path: &NodePath, canvas_context: &CanvasContext) -> bool {
+    //     canvas_context.selected_node_paths.contains(current_path)
+    // }
+
+    fn handle_selection(
+        current_path: &NodePath,
+        response_clicked: bool,
+        commands: &mut Vec<EditorCommand>,
+        canvas_context: &mut CanvasContext,
+    ) {
+        if !response_clicked {
+            return;
+        }
+
+        if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
+            // todo! make all selected nodes a child of the new parent
+            // but for now we're just going to work with clicking on this one
+            commands.push(EditorCommand::move_node(
+                current_path.clone(),
+                parent_path.clone(),
+            ));
+        } else if !canvas_context.selected_node_paths.contains(current_path) {
+            // not being looked for, just select
+            canvas_context
+                .selected_node_paths
+                .push(current_path.clone());
+        }
+    }
+
+    fn drag_world_delta(response: &egui::Response, canvas_context: &CanvasContext) -> egui::Vec2 {
+        response.drag_delta() / canvas_context.camera.zoom
+    }
+
+    fn drag_vec2f(value: &mut Vec2f, response: &egui::Response, canvas_context: &CanvasContext) {
+        let world_delta = Self::drag_world_delta(response, canvas_context);
+
+        value.x += world_delta.x;
+        value.y -= world_delta.y;
+    }
+
+    fn make_handle_rect(
+        center: egui::Pos2,
+        size: f32,
+        canvas_context: &CanvasContext,
+    ) -> egui::Rect {
+        egui::Rect::from_center_size(center, egui::Vec2::splat(size * canvas_context.camera.zoom))
+    }
+
+    fn interact_handle(
+        ui: &mut egui::Ui,
+        canvas_rect: egui::Rect,
+        rect: egui::Rect,
+        current_path: &NodePath,
+        suffix: &'static str,
+    ) -> egui::Response {
+        ui.interact(
+            canvas_rect.intersect(rect),
+            egui::Id::new(current_path).with(suffix),
+            egui::Sense::click_and_drag(),
+        )
     }
 }
