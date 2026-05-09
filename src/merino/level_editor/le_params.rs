@@ -4,7 +4,7 @@ use crate::merino::{game::mapbin::MapNodeType, level_editor::LevelEditor};
 
 use anyhow::{Result, anyhow};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub enum ParameterDataType {
     #[default]
     None,
@@ -16,7 +16,7 @@ pub enum ParameterDataType {
 }
 
 impl ParameterDataType {
-    fn from_string(string: &str) -> Result<Self> {
+    pub fn from_string(string: &str) -> Result<Self> {
         match string {
             "int" => Ok(Self::Int),
             "float" => Ok(Self::Float),

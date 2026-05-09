@@ -5,10 +5,20 @@
             "variants": [
                 {
                     "when": {
-                        "[parameter]": "[parameter value]"
+                        "data_type": "[data type]",
+                        "slot": 0,
+                        "expected_value": "[value]"
                     },
-
-                    "image": "path_to_secondary_image_relative_to_merino_res.png"
+                    "then": {
+                        "display_image": "alternative image"
+                    }
+                },
+                {
+                    "copy": {
+                        "data_type": "[data type]",
+                        "slot": 1
+                    },
+                    "to": "[manipulation]"
                 }
             ]
         }

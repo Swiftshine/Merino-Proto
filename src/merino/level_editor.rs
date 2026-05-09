@@ -1,4 +1,5 @@
 use crate::merino::common::util::get_merino_folder_path;
+use crate::merino::game::mapbin::Params;
 use crate::merino::level_editor::le_image::ImageDefinition;
 use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
@@ -193,36 +194,33 @@ impl ImageBank {
         Ok(())
     }
 
-    pub fn get_texture_for_node(
+    pub fn resolve_image_for_node<const N: usize>(
         &mut self,
         ctx: &egui::Context,
         node_type: MapNodeType,
         name: &str,
-    ) -> Option<&egui::TextureHandle> {
+        params: &Params<N>,
+    ) -> Option<(egui::TextureHandle, f32)> {
         let def = self.image_objects.get(&(node_type, name.to_string()))?;
 
-        let image_name = def.display_image.as_ref()?;
+        let resolved = def.resolve(params)?;
 
-        let asset_id = format!("{}/{}", node_type.to_string(), name);
+        let asset_id = format!("{}/{}/{}", node_type.to_string(), name, resolved.image_path);
 
-        let base_path = match get_merino_folder_path() {
-            Ok(p) => p,
-            Err(e) => {
-                eprintln!("Failed to get merino folder path: {e}");
-                return None;
-            }
-        };
+        let base_path = get_merino_folder_path().ok()?;
 
         let file_path = base_path
             .join("image")
             .join(node_type.to_string())
-            .join(image_name);
+            .join(&resolved.image_path);
 
         let file_path = file_path.to_string_lossy();
 
         let _ = self.load_texture(ctx, &asset_id, &file_path);
 
-        self.textures.get(&asset_id)
+        let texture = self.textures.get(&asset_id)?;
+
+        Some((texture.clone(), resolved.rotation_degrees))
     }
 }
 

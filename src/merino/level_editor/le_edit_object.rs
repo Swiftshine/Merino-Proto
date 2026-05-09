@@ -1,5 +1,5 @@
 use crate::merino::{
-    game::mapbin::{MapDataNode, MapNodeType, NodeData, Vec2f},
+    game::mapbin::{MapDataNode, MapNodeType, NodeData, Params, Vec2f, Vec3f},
     level_editor::{CanvasContext, CanvasTarget, EditorCommand, LevelEditor, NodePath},
 };
 
@@ -186,24 +186,134 @@ impl MapDataNode {
         color: egui::Color32,
         allow_dummy_terrain_filter: bool,
     ) {
-        let (name, position) = match &mut self.node_data {
-            NodeData::MapObjSet { name, position, .. } => (name.as_str(), position),
+        match &mut self.node_data {
+            NodeData::MapObjSet {
+                name,
+                position,
+                params,
+                ..
+            } => {
+                Self::draw_point_node_with_params(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    color,
+                    allow_dummy_terrain_filter,
+                    self.node_type,
+                    name.as_str(),
+                    position,
+                    params,
+                );
+            }
 
-            NodeData::MapItemSet { name, position, .. } => (name.as_str(), position),
+            NodeData::MapItemSet {
+                name,
+                position,
+                params,
+                ..
+            } => {
+                Self::draw_point_node_with_params(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    color,
+                    allow_dummy_terrain_filter,
+                    self.node_type,
+                    name.as_str(),
+                    position,
+                    params,
+                );
+            }
 
-            NodeData::MapEnemySet { name, position, .. } => (name.as_str(), position),
+            NodeData::MapEnemySet {
+                name,
+                position,
+                params,
+                ..
+            } => {
+                Self::draw_point_node_with_params(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    color,
+                    allow_dummy_terrain_filter,
+                    self.node_type,
+                    name.as_str(),
+                    position,
+                    params,
+                );
+            }
 
-            NodeData::MapLocator { name, position, .. } => (name.as_str(), position),
+            NodeData::MapLocator {
+                name,
+                position,
+                params,
+            } => {
+                Self::draw_point_node_with_params(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    color,
+                    allow_dummy_terrain_filter,
+                    self.node_type,
+                    name.as_str(),
+                    position,
+                    params,
+                );
+            }
 
             NodeData::MapTerrain {
                 collision_type,
                 position,
+                params,
                 ..
-            } => (collision_type.as_str(), position),
+            } => {
+                Self::draw_point_node_with_params(
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    commands,
+                    canvas_context,
+                    do_edit,
+                    color,
+                    allow_dummy_terrain_filter,
+                    self.node_type,
+                    collision_type.as_str(),
+                    position,
+                    params,
+                );
+            }
 
-            _ => return,
-        };
+            _ => {}
+        }
+    }
 
+    fn draw_point_node_with_params<const N: usize>(
+        ui: &mut egui::Ui,
+        canvas_rect: egui::Rect,
+        current_path: &mut NodePath,
+        commands: &mut Vec<EditorCommand>,
+        canvas_context: &mut CanvasContext,
+        do_edit: bool,
+        color: egui::Color32,
+        allow_dummy_terrain_filter: bool,
+        node_type: MapNodeType,
+        name: &str,
+        position: &mut Vec3f,
+        params: &Params<N>,
+    ) {
         if allow_dummy_terrain_filter
             && !(canvas_context.display_dummy_terrain || name != "dummy_terrain")
         {
@@ -223,17 +333,12 @@ impl MapDataNode {
             canvas_context,
         );
 
-        if let Some(tex) =
+        if let Some((tex, rotation)) =
             canvas_context
                 .image_bank
-                .get_texture_for_node(ui.ctx(), self.node_type, name)
+                .resolve_image_for_node(ui.ctx(), node_type, name, params)
         {
-            painter.image(
-                tex.id(),
-                square,
-                egui::Rect::from_min_max(egui::Pos2::ZERO, egui::Pos2::new(1.0, 1.0)),
-                egui::Color32::WHITE,
-            );
+            draw_rotated_image(&painter, tex.id(), square, rotation, egui::Color32::WHITE);
         }
 
         painter.rect_stroke(
@@ -698,4 +803,65 @@ impl MapDataNode {
             egui::Sense::click_and_drag(),
         )
     }
+}
+
+fn draw_rotated_image(
+    painter: &egui::Painter,
+    texture_id: egui::TextureId,
+    rect: egui::Rect,
+    rotation_degrees: f32,
+    tint: egui::Color32,
+) {
+    use egui::{
+        Pos2,
+        epaint::{Mesh, Vertex},
+    };
+
+    let mut mesh = Mesh::with_texture(texture_id);
+
+    let center = rect.center();
+
+    let rotation = egui::emath::Rot2::from_angle(rotation_degrees.to_radians());
+
+    let rotate = |p: Pos2| center + rotation * (p - center);
+
+    let p0 = rotate(rect.left_top());
+    let p1 = rotate(rect.right_top());
+    let p2 = rotate(rect.right_bottom());
+    let p3 = rotate(rect.left_bottom());
+
+    let uv0 = Pos2::new(0.0, 0.0);
+    let uv1 = Pos2::new(1.0, 0.0);
+    let uv2 = Pos2::new(1.0, 1.0);
+    let uv3 = Pos2::new(0.0, 1.0);
+
+    let base = mesh.vertices.len() as u32;
+
+    mesh.vertices.extend_from_slice(&[
+        Vertex {
+            pos: p0,
+            uv: uv0,
+            color: tint,
+        },
+        Vertex {
+            pos: p1,
+            uv: uv1,
+            color: tint,
+        },
+        Vertex {
+            pos: p2,
+            uv: uv2,
+            color: tint,
+        },
+        Vertex {
+            pos: p3,
+            uv: uv3,
+            color: tint,
+        },
+    ]);
+
+    mesh.indices
+        .extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+
+    painter.add(egui::Shape::mesh(mesh));
 }
