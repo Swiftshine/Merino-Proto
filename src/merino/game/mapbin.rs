@@ -3,7 +3,9 @@ use enum_map::Enum;
 use std::fmt::Display;
 use strum::{AsRefStr, Display, EnumString, FromRepr};
 
-#[derive(FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone, EnumString, PartialEq, Enum)]
+#[derive(
+    FromRepr, Debug, Default, Display, AsRefStr, Copy, Clone, EnumString, PartialEq, Enum, Hash, Eq,
+)]
 #[repr(u32)]
 pub enum MapNodeType {
     #[default]

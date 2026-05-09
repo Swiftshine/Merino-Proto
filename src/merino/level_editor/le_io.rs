@@ -10,6 +10,7 @@ use anyhow::{Context, Result};
 use rfd::FileDialog;
 
 const OBJECTDATA_FILE: &str = "objectdata.json";
+const IMAGEDATA_FILE: &str = "imagedata.json";
 
 impl LevelEditor {
     pub fn open_file(&mut self) -> Result<()> {
@@ -68,5 +69,19 @@ impl LevelEditor {
         let file = fs::read_to_string(path).context("Could not find objectdata.json")?;
 
         self.parse_params(file)
+    }
+
+    pub fn load_image_data(&mut self) -> Result<()> {
+        if !merino_folder_exists()? {
+            make_merino_folder()?;
+        }
+
+        let path = get_merino_folder_path()?.join(IMAGEDATA_FILE);
+
+        let file = fs::read_to_string(path).context("Could not find imagedata.json")?;
+
+        self.parse_image_data(file)?;
+
+        Ok(())
     }
 }

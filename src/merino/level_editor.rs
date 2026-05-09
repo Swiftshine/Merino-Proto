@@ -1,4 +1,5 @@
 use crate::merino::common::util::get_merino_folder_path;
+use crate::merino::level_editor::le_image::ImageDefinition;
 use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
 };
@@ -163,35 +164,65 @@ pub struct EditorContext {
 
 #[derive(Default)]
 pub struct ImageBank {
-    pub textures: HashMap<String, egui::TextureHandle>,
+    pub image_objects: HashMap<(MapNodeType, String), ImageDefinition>,
+    textures: HashMap<String, egui::TextureHandle>,
 }
 
 impl ImageBank {
     pub fn load_texture(
         &mut self,
         ctx: &egui::Context,
+        asset_id: &str,
         file_path: &str,
-        relative_path: &str,
     ) -> Result<()> {
-        if self.textures.contains_key(relative_path) {
+        if self.textures.contains_key(asset_id) {
             return Ok(());
         }
 
-        let image = image::open(file_path)?;
-        let image = image.to_rgba8();
+        let image = image::open(file_path)?.to_rgba8();
+
         let size = [image.width() as usize, image.height() as usize];
         let pixels = image.into_raw();
+
         let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
 
-        let texture = ctx.load_texture(
-            file_path.to_string(),
-            color_image,
-            egui::TextureOptions::LINEAR,
-        );
+        let texture = ctx.load_texture(asset_id, color_image, egui::TextureOptions::LINEAR);
 
-        self.textures.insert(relative_path.to_string(), texture);
+        self.textures.insert(asset_id.to_string(), texture);
 
         Ok(())
+    }
+
+    pub fn get_texture_for_node(
+        &mut self,
+        ctx: &egui::Context,
+        node_type: MapNodeType,
+        name: &str,
+    ) -> Option<&egui::TextureHandle> {
+        let def = self.image_objects.get(&(node_type, name.to_string()))?;
+
+        let image_name = def.display_image.as_ref()?;
+
+        let asset_id = format!("{}/{}", node_type.to_string(), name);
+
+        let base_path = match get_merino_folder_path() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("Failed to get merino folder path: {e}");
+                return None;
+            }
+        };
+
+        let file_path = base_path
+            .join("image")
+            .join(node_type.to_string())
+            .join(image_name);
+
+        let file_path = file_path.to_string_lossy();
+
+        let _ = self.load_texture(ctx, &asset_id, &file_path);
+
+        self.textures.get(&asset_id)
     }
 }
 
@@ -433,26 +464,8 @@ impl LevelEditor {
                     let _ = self.load_param_data();
                 }
 
-                // TEMP!!!
                 if ui.button("Load Image Data").clicked() {
-                    let result = self.canvas_context.image_bank.load_texture(
-                        ui.ctx(),
-                        get_merino_folder_path()
-                            .unwrap()
-                            .join("image")
-                            .join("MapObjSet")
-                            .join("question_cloud.png")
-                            .to_str()
-                            .unwrap(),
-                        "MapObjSet/question_cloud.png",
-                    );
-
-                    match result {
-                        Ok(_) => println!("OK!"),
-                        Err(e) => {
-                            dbg!(e);
-                        }
-                    }
+                    let _ = self.load_image_data();
                 }
 
                 ui.menu_button("Open Window", |ui| {
