@@ -40,7 +40,7 @@
 - [x] Level saving
 - [ ] clear settings when loading new level
 
-## QOL things to add in the final
+## QOL things
 
 - [ ] GFA file loading
 - [x] docking
@@ -49,6 +49,7 @@
 - [ ] creating new files
     - this would require a number of different fields for file version (we could just hardcode it to latest)
     - note: no need to allow the user to add a `MapSet` because it could just be pre-inited
+- [ ] selection rect
 
 ## Roadmap things
 
