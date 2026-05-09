@@ -281,5 +281,5 @@ VarArray<String32> itemTypes @ $;
 VarArray<String32> collisionTypes @ $;
 VarArray<String32> rectTypes @ $;
 VarArray<String32> enemyTypes @ $;
-VarArray<String32> unkTypes1 @ $;
+VarArray<String32> terrainTypes @ $;
 MapSetNode root @ $;
