@@ -113,7 +113,7 @@ struct MapSetNode {
     }
     else if (mType == MapNodeType::MapItemSet) {
         s32 m_MIS_NameIndex;
-        Vec2f m_MIS_Position;
+        Vec3f m_MIS_Position;
         f32 m_MIS_unk3;
         Vec2f m_MIS_unk4;
         String32 m_MIS_unk5;
