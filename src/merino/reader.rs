@@ -17,7 +17,7 @@ pub struct Reader<'a> {
     cursor: Cursor<&'a [u8]>,
     pub version: f32,
     pub object_types: Vec<String32>,
-    pub collectible_types: Vec<String32>,
+    pub item_types: Vec<String32>,
     pub collision_types: Vec<String32>,
     pub rect_types: Vec<String32>,
     pub enemy_types: Vec<String32>,
@@ -135,7 +135,7 @@ impl<'a> Reader<'a> {
         // read strings
 
         self.object_types = self.read_array(|reader| reader.read_object::<String32>())?;
-        self.collectible_types = self.read_array(|reader| reader.read_object::<String32>())?;
+        self.item_types = self.read_array(|reader| reader.read_object::<String32>())?;
         self.collision_types = self.read_array(|reader| reader.read_object::<String32>())?;
         self.rect_types = self.read_array(|reader| reader.read_object::<String32>())?;
         self.enemy_types = self.read_array(|reader| reader.read_object::<String32>())?;
@@ -145,7 +145,7 @@ impl<'a> Reader<'a> {
         Ok(Mapbin {
             version,
             object_types: self.object_types,
-            item_types: self.collectible_types,
+            item_types: self.item_types,
             collision_types: self.collision_types,
             rect_types: self.rect_types,
             enemy_types: self.enemy_types,
@@ -178,7 +178,7 @@ impl<'a> Reader<'a> {
 
     pub fn read_item_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.collectible_types, index, "Collectible")
+        self.get_string_by_index(&self.item_types, index, "Item")
     }
 
     pub fn read_collision_type(&mut self) -> Result<String32> {
@@ -186,9 +186,9 @@ impl<'a> Reader<'a> {
         self.get_string_by_index(&self.collision_types, index, "Collision")
     }
 
-    // pub fn read_unk_type_1(&mut self) -> Result<String> {
+    // pub fn read_unk_type_1_type(&mut self) -> Result<String32> {
     //     let index = self.read_u32()? as usize;
-    //     self.get_string_by_index(&self.unk_types_1, index, "Unk1")
+    //     self.get_string_by_index(&self.unk_types_1, index, "Terrain")
     // }
 }
 

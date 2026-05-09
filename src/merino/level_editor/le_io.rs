@@ -23,9 +23,16 @@ impl LevelEditor {
             let path = self.io_context.file_path.as_ref().unwrap();
             let data = fs::read(path)?;
 
-            self.file_context.mapdata = read_level(&data)?;
+            match read_level(&data) {
+                Ok(data) => {
+                    self.file_context.mapdata = data;
+                    self.io_context.file_open = true;
+                }
 
-            self.io_context.file_open = true;
+                Err(e) => {
+                    dbg!(e);
+                }
+            }
         }
 
         Ok(())

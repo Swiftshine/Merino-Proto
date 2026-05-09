@@ -302,8 +302,8 @@ impl Writer {
             }
 
             NodeData::MapTerrain {
-                collision_type,
-                unk2,
+                terrain_type: collision_type,
+                position,
                 unk3,
                 unk4,
                 unk5,
@@ -315,35 +315,31 @@ impl Writer {
                 unk11,
                 unk12,
                 unk13,
-                unk14,
-                unk15,
                 params,
-                unk16,
+                unk15,
             } => {
                 let index =
                     self.get_index_of(&mapbin.collision_types, collision_type, "Collision")?;
                 self.write_u32(index)?;
-                self.write_f32(*unk2)?;
-                self.write_f32(*unk3)?;
-                self.write_f32(*unk4)?;
-                self.write_at_version(version, 4.43, unk5, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.44, unk6, |w, v| v.write(w, version))?;
+                position.write(self, version)?;
+                self.write_at_version(version, 4.43, unk3, |w, v| w.write_i32(*v))?;
+                self.write_at_version(version, 4.44, unk4, |w, v| v.write(w, version))?;
+                self.write_f32(*unk5)?;
+                self.write_f32(*unk6)?;
                 self.write_f32(*unk7)?;
                 self.write_f32(*unk8)?;
-                self.write_f32(*unk9)?;
-                self.write_f32(*unk10)?;
+                self.write_at_version(version, 4.71, unk9, |w, v| w.write_i32(*v))?;
+                self.write_at_version(version, 4.71, unk10, |w, v| w.write_i32(*v))?;
                 self.write_at_version(version, 4.71, unk11, |w, v| w.write_i32(*v))?;
                 self.write_at_version(version, 4.71, unk12, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.71, unk13, |w, v| w.write_i32(*v))?;
-                self.write_at_version(version, 4.71, unk14, |w, v| w.write_i32(*v))?;
-                self.write_u32(unk15.len() as u32)?;
-                for triangle in unk15 {
+                self.write_u32(unk13.len() as u32)?;
+                for triangle in unk13 {
                     triangle[0].write(self, version)?;
                     triangle[1].write(self, version)?;
                     triangle[2].write(self, version)?;
                 }
                 params.write(self, version)?;
-                self.write_at_version(version, 4.6, unk16, |w, v| {
+                self.write_at_version(version, 4.6, unk15, |w, v| {
                     for pair in v {
                         pair[0].write(w, version)?;
                         pair[1].write(w, version)?;

@@ -195,23 +195,21 @@ pub enum NodeData {
     },
 
     MapTerrain {
-        collision_type: String32,
-        unk2: f32,
-        unk3: f32,
-        unk4: f32,
-        unk5: Option<i32>,      // version >= 4.43
-        unk6: Option<String32>, // version >= 4.44
+        terrain_type: String32,
+        position: Vec3f,
+        unk3: Option<i32>,      // version >= 4.43
+        unk4: Option<String32>, // version >= 4.44
+        unk5: f32,
+        unk6: f32,
         unk7: f32,
         unk8: f32,
-        unk9: f32,
-        unk10: f32,
+        unk9: Option<i32>,  // version >= 4.71
+        unk10: Option<i32>, // version >= 4.71
         unk11: Option<i32>, // version >= 4.71
         unk12: Option<i32>, // version >= 4.71
-        unk13: Option<i32>, // version >= 4.71
-        unk14: Option<i32>, // version >= 4.71
-        unk15: Vec<[Vec2f; 3]>,
+        unk13: Vec<[Vec2f; 3]>,
         params: Params<3>,
-        unk16: Option<[[String32; 2]; 3]>, // version >= 4.6
+        unk15: Option<[[String32; 2]; 3]>, // version >= 4.6
     },
 }
 
@@ -423,7 +421,10 @@ impl MapDataNode {
                     enemy_types.push(name.clone());
                 }
             }
-            NodeData::MapTerrain { collision_type, .. } => {
+            NodeData::MapTerrain {
+                terrain_type: collision_type,
+                ..
+            } => {
                 if !collision_types.contains(collision_type) {
                     collision_types.push(collision_type.clone());
                 }

@@ -187,21 +187,19 @@ impl MapDataNode {
             },
 
             MapNodeType::MapTerrain => NodeData::MapTerrain {
-                collision_type: reader.read_collision_type()?,
-                unk2: reader.read_f32()?,
-                unk3: reader.read_f32()?,
-                unk4: reader.read_f32()?,
-                unk5: reader.read_at_version(4.43, |r| r.read_i32())?,
-                unk6: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
+                terrain_type: reader.read_collision_type()?,
+                position: reader.read_object::<Vec3f>()?,
+                unk3: reader.read_at_version(4.43, |r| r.read_i32())?,
+                unk4: reader.read_at_version(4.44, |r| r.read_object::<String32>())?,
+                unk5: reader.read_f32()?,
+                unk6: reader.read_f32()?,
                 unk7: reader.read_f32()?,
                 unk8: reader.read_f32()?,
-                unk9: reader.read_f32()?,
-                unk10: reader.read_f32()?,
+                unk9: reader.read_at_version(4.71, |r| r.read_i32())?,
+                unk10: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk11: reader.read_at_version(4.71, |r| r.read_i32())?,
                 unk12: reader.read_at_version(4.71, |r| r.read_i32())?,
-                unk13: reader.read_at_version(4.71, |r| r.read_i32())?,
-                unk14: reader.read_at_version(4.71, |r| r.read_i32())?,
-                unk15: reader.read_array(|r| {
+                unk13: reader.read_array(|r| {
                     Ok([
                         r.read_object::<Vec2f>()?,
                         r.read_object::<Vec2f>()?,
@@ -209,7 +207,7 @@ impl MapDataNode {
                     ])
                 })?,
                 params: reader.read_object::<Params<3>>()?,
-                unk16: reader.read_at_version(4.6, |r| {
+                unk15: reader.read_at_version(4.6, |r| {
                     let mut outer = std::array::from_fn(|_| Default::default());
                     for i in 0..3 {
                         outer[i] = [r.read_object::<String32>()?, r.read_object::<String32>()?];
