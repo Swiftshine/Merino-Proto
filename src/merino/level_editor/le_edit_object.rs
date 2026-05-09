@@ -196,6 +196,8 @@ impl MapDataNode {
 
             NodeData::MapEnemySet { name, position, .. } => (name.as_str(), position),
 
+            NodeData::MapLocator { name, position, .. } => (name.as_str(), position),
+
             NodeData::MapTerrain {
                 terrain_type,
                 position,
