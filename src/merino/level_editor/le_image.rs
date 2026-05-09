@@ -136,6 +136,7 @@ impl LevelEditor {
         ];
 
         self.canvas_context.image_bank.image_objects.clear();
+        self.canvas_context.image_bank.textures.clear();
 
         for set_name in set_names {
             let set_object = match json.get(set_name).and_then(|v| v.as_object()) {
