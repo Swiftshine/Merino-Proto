@@ -1,9 +1,12 @@
+use crate::merino::common::util::get_merino_folder_path;
 use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
 };
 use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use enum_map::EnumMap;
 use strum::{Display, EnumIter};
 
@@ -11,6 +14,7 @@ mod le_add_object;
 mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
+mod le_image;
 mod le_inputs;
 mod le_io;
 mod le_node_tree;
@@ -158,11 +162,46 @@ pub struct EditorContext {
 }
 
 #[derive(Default)]
+pub struct ImageBank {
+    pub textures: HashMap<String, egui::TextureHandle>,
+}
+
+impl ImageBank {
+    pub fn load_texture(
+        &mut self,
+        ctx: &egui::Context,
+        file_path: &str,
+        relative_path: &str,
+    ) -> Result<()> {
+        if self.textures.contains_key(relative_path) {
+            return Ok(());
+        }
+
+        let image = image::open(file_path)?;
+        let image = image.to_rgba8();
+        let size = [image.width() as usize, image.height() as usize];
+        let pixels = image.into_raw();
+        let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
+
+        let texture = ctx.load_texture(
+            file_path.to_string(),
+            color_image,
+            egui::TextureOptions::LINEAR,
+        );
+
+        self.textures.insert(relative_path.to_string(), texture);
+
+        Ok(())
+    }
+}
+
+#[derive(Default)]
 pub struct CanvasContext {
     pub camera: CanvasCamera,
     pub selected_node_paths: Vec<NodePath>,
     pub target: Option<CanvasTarget>,
     pub node_edit_settings: EnumMap<MapNodeType, NodeEditSettings>,
+    pub image_bank: ImageBank,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
 }
@@ -392,6 +431,28 @@ impl LevelEditor {
 
                 if ui.button("Load Parameter Data").clicked() {
                     let _ = self.load_param_data();
+                }
+
+                // TEMP!!!
+                if ui.button("Load Image Data").clicked() {
+                    let result = self.canvas_context.image_bank.load_texture(
+                        ui.ctx(),
+                        get_merino_folder_path()
+                            .unwrap()
+                            .join("image")
+                            .join("MapObjSet")
+                            .join("question_cloud.png")
+                            .to_str()
+                            .unwrap(),
+                        "MapObjSet/question_cloud.png",
+                    );
+
+                    match result {
+                        Ok(_) => println!("OK!"),
+                        Err(e) => {
+                            dbg!(e);
+                        }
+                    }
                 }
 
                 ui.menu_button("Open Window", |ui| {

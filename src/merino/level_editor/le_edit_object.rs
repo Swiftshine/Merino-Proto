@@ -223,6 +223,27 @@ impl MapDataNode {
             canvas_context,
         );
 
+        // TEMP!
+
+        if name == "question_cloud_wing" {
+            if let Some(handle) = canvas_context
+                .image_bank
+                .textures
+                .get("MapObjSet/question_cloud.png")
+            {
+                painter.image(
+                    handle.id(),
+                    square,
+                    egui::Rect {
+                        min: egui::Pos2::new(0.0, 0.0),
+                        max: egui::Pos2::new(1.0, 1.0),
+                    },
+                    egui::Color32::WHITE,
+                );
+            }
+        }
+
+        // end of temp
         painter.rect_stroke(
             square,
             0.0,

@@ -1,0 +1,16 @@
+{
+    "MapObjSet": {
+        "[placeholder MapObj]": {
+            "display_image": "path_to_image_relative_to_merino_res.png",
+            "variants": [
+                {
+                    "when": {
+                        "[parameter]": "[parameter value]"
+                    },
+
+                    "image": "path_to_secondary_image_relative_to_merino_res.png"
+                }
+            ]
+        }
+    }
+}
