@@ -3,6 +3,7 @@ use crate::merino::{
     level_editor::{CanvasContext, CanvasTarget, EditorCommand, LevelEditor, NodePath},
 };
 
+const SMALL_SQUARE_SIZE: f32 = 0.5;
 const SQUARE_SIZE: f32 = 2.0;
 
 const SELECTION_HIGHLIGHT: egui::Color32 =
@@ -45,7 +46,15 @@ impl MapDataNode {
             //     self.edit_mapset(context, ui, canvas_rect, current_path);
             // }
             MapNodeType::MapPolySet => {
-                self.edit_mappolyset(context, ui, canvas_rect, current_path);
+                self.edit_mappolyset(
+                    context,
+                    ui,
+                    canvas_rect,
+                    current_path,
+                    egui::Color32::WHITE,
+                    commands,
+                    do_edit,
+                );
             }
 
             MapNodeType::MapObjSet => {
@@ -126,9 +135,20 @@ impl MapDataNode {
         context: &mut CanvasContext,
         ui: &mut egui::Ui,
         canvas_rect: egui::Rect,
-        _current_path: &mut NodePath,
+        current_path: &mut NodePath,
+        mut color: egui::Color32,
+        commands: &mut Vec<EditorCommand>,
+        do_edit: bool,
     ) {
-        let NodeData::MapPolySet { start, end, .. } = &mut self.node_data else {
+        /* draw */
+
+        let NodeData::MapPolySet {
+            start,
+            end,
+            collision_normal,
+            ..
+        } = &mut self.node_data
+        else {
             return;
         };
 
@@ -137,10 +157,83 @@ impl MapDataNode {
         let draw_start = canvas_rect.min + context.camera.convert_to_camera(start.into());
         let draw_end = canvas_rect.min + context.camera.convert_to_camera(end.into());
 
-        painter.line_segment(
-            [draw_start, draw_end],
-            egui::Stroke::new(1.0, egui::Color32::WHITE),
+        painter.line_segment([draw_start, draw_end], egui::Stroke::new(1.0, color));
+
+        /* edit */
+        if !do_edit {
+            return;
+        }
+
+        let start_rect = egui::Rect::from_center_size(
+            egui::Pos2::new(draw_start.x, draw_start.y - SQUARE_SIZE * 2.0),
+            egui::Vec2::splat(SMALL_SQUARE_SIZE * context.camera.zoom),
         );
+
+        let end_rect = egui::Rect::from_center_size(
+            egui::Pos2::new(draw_end.x, draw_end.y - SQUARE_SIZE * 2.0),
+            egui::Vec2::splat(SMALL_SQUARE_SIZE * context.camera.zoom),
+        );
+
+        let start_resp = ui.interact(
+            canvas_rect.intersect(start_rect),
+            egui::Id::new(&current_path).with("start"),
+            egui::Sense::click_and_drag(),
+        );
+
+        let end_resp = ui.interact(
+            canvas_rect.intersect(end_rect),
+            egui::Id::new(&current_path).with("end"),
+            egui::Sense::click_and_drag(),
+        );
+
+        if context.selected_node_paths.contains(&current_path) {
+            color = egui::Color32::RED;
+        }
+
+        painter.rect_filled(start_rect, 0.3, color);
+        painter.rect_filled(end_rect, 0.3, color);
+
+        let responses = [&start_resp, &end_resp];
+
+        if responses
+            .iter()
+            .any(|resp| resp.clicked_by(egui::PointerButton::Primary))
+        {
+            if let Some(CanvasTarget::Search(parent_path)) = &context.target {
+                commands.push(EditorCommand::move_node(
+                    current_path.clone(),
+                    parent_path.clone(),
+                ));
+            } else {
+                context.selected_node_paths.push(current_path.clone());
+            }
+        }
+
+        // dragging
+        let mut dragged = false;
+        if start_resp.dragged_by(egui::PointerButton::Primary) {
+            let world_delta = start_resp.drag_delta() / context.camera.zoom;
+            start.x += world_delta.x;
+            start.y -= world_delta.y;
+            dragged = true;
+        }
+
+        if end_resp.dragged_by(egui::PointerButton::Primary) {
+            let world_delta = end_resp.drag_delta() / context.camera.zoom;
+            end.x += world_delta.x;
+            end.y -= world_delta.y;
+            dragged = true;
+        }
+
+        if dragged {
+            // recalculate collision vector
+            let direction = (end.x - start.x, end.y - start.y);
+            let magnitude = f32::sqrt(direction.0.powf(2.0) + direction.1.powf(2.0));
+            let normalized = (direction.0 / magnitude, direction.1 / magnitude);
+
+            collision_normal.x = -normalized.1;
+            collision_normal.y = normalized.0;
+        }
     }
 
     fn edit_mapobjset(

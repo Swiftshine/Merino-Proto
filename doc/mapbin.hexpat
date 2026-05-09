@@ -76,7 +76,7 @@ struct MapSetNode {
     else if (mType == MapNodeType::MapPolySet) {
         Vec2f m_MPS_Start;
         Vec2f m_MPS_End;
-        Vec2f m_MPS_unk1; // maybe a normalized vector?
+        Vec2f m_MPS_CollisionNormal;
         u32 m_MPS_unk2; // type index of some sort?
         u32 m_MPS_unk3; // type index of some sort?
     }

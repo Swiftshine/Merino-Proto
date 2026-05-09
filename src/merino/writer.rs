@@ -118,7 +118,7 @@ impl Writer {
             NodeData::MapPolySet {
                 start,
                 end,
-                unk1,
+                collision_normal: unk1,
                 collision_type,
                 unk3,
             } => {

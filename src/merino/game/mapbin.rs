@@ -102,7 +102,7 @@ pub enum NodeData {
     MapPolySet {
         start: Vec2f,
         end: Vec2f,
-        unk1: Vec2f,
+        collision_normal: Vec2f,
         collision_type: String32,
         unk3: u32,
     },

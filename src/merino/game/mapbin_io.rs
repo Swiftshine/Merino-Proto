@@ -80,7 +80,7 @@ impl MapDataNode {
             MapNodeType::MapPolySet => NodeData::MapPolySet {
                 start: reader.read_object::<Vec2f>()?,
                 end: reader.read_object::<Vec2f>()?,
-                unk1: reader.read_object::<Vec2f>()?,
+                collision_normal: reader.read_object::<Vec2f>()?,
                 collision_type: reader.read_collision_type()?,
                 unk3: reader.read_u32()?,
             },

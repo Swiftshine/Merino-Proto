@@ -36,6 +36,7 @@
     - [x] object addition
     - [x] object removal
 - [x] Level saving
+- [ ] clear settings when loading new level
 
 ## Things to add in the final
 
