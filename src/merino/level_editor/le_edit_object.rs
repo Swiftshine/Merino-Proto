@@ -34,139 +34,136 @@ impl MapDataNode {
         commands: &mut Vec<EditorCommand>,
         canvas_context: &mut CanvasContext,
     ) {
-        if !canvas_context.can_view(self.node_type) {
-            return;
-        }
+        if canvas_context.can_view(self.node_type) {
+            let do_edit = canvas_context.can_edit(self.node_type);
 
-        let do_edit = canvas_context.can_edit(self.node_type);
+            match self.node_type {
+                MapNodeType::MapSet => {
+                    self.edit_rect_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::DARK_GREEN,
+                    );
+                }
 
-        match self.node_type {
-            MapNodeType::MapSet => {
-                self.edit_rect_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::DARK_GREEN,
-                );
-            }
+                MapNodeType::MapPolySet => {
+                    self.edit_mappolyset(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::WHITE,
+                    );
+                }
 
-            MapNodeType::MapPolySet => {
-                self.edit_mappolyset(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::WHITE,
-                );
-            }
+                MapNodeType::MapObjSet => {
+                    self.edit_point_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::WHITE,
+                        true,
+                    );
+                }
 
-            MapNodeType::MapObjSet => {
-                self.edit_point_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::WHITE,
-                    true,
-                );
-            }
+                MapNodeType::MapItemSet => {
+                    self.edit_point_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::GOLD,
+                        false,
+                    );
+                }
 
-            MapNodeType::MapItemSet => {
-                self.edit_point_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::GOLD,
-                    false,
-                );
-            }
+                MapNodeType::MapEnemySet => {
+                    self.edit_point_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::LIGHT_RED,
+                        false,
+                    );
+                }
 
-            MapNodeType::MapEnemySet => {
-                self.edit_point_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::LIGHT_RED,
-                    false,
-                );
-            }
+                MapNodeType::MapLocator => {
+                    self.edit_point_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::LIGHT_BLUE,
+                        false,
+                    );
+                }
 
-            MapNodeType::MapLocator => {
-                self.edit_point_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::LIGHT_BLUE,
-                    false,
-                );
-            }
+                MapNodeType::MapPath => {
+                    self.edit_mappath(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::BLUE,
+                    );
+                }
 
-            MapNodeType::MapPath => {
-                self.edit_mappath(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::BLUE,
-                );
-            }
+                MapNodeType::MapRect => {
+                    self.edit_rect_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::from_rgb(0xC8, 0x74, 0xD9),
+                    );
+                }
 
-            MapNodeType::MapRect => {
-                self.edit_rect_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::from_rgb(0xC8, 0x74, 0xD9),
-                );
-            }
+                MapNodeType::MapCircle => {
+                    self.edit_mapcircle(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::LIGHT_GREEN,
+                    );
+                }
 
-            MapNodeType::MapCircle => {
-                self.edit_mapcircle(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::LIGHT_GREEN,
-                );
-            }
-
-            MapNodeType::MapTerrain => {
-                self.edit_point_node(
-                    ui,
-                    canvas_rect,
-                    current_path,
-                    commands,
-                    canvas_context,
-                    do_edit,
-                    egui::Color32::from_rgb(120, 220, 120),
-                    false,
-                );
+                MapNodeType::MapTerrain => {
+                    self.edit_point_node(
+                        ui,
+                        canvas_rect,
+                        current_path,
+                        commands,
+                        canvas_context,
+                        do_edit,
+                        egui::Color32::from_rgb(120, 220, 120),
+                        false,
+                    );
+                }
             }
         }
-
         for (branch, index, child) in self.all_children_mut() {
             current_path.push((branch, index));
 
