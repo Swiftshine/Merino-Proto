@@ -174,7 +174,7 @@ impl Writer {
 
             NodeData::MapItemSet {
                 name,
-                unk2,
+                position,
                 unk3,
                 unk4,
                 unk5,
@@ -190,8 +190,8 @@ impl Writer {
             } => {
                 let index = self.get_index_of(&mapbin.item_types, name, "Item")?;
                 self.write_u32(index)?;
-                unk2.write(self, version)?;
-                unk3.write(self, version)?;
+                position.write(self, version)?;
+                self.write_f32(*unk3)?;
                 unk4.write(self, version)?;
                 unk5.write(self, version)?;
                 self.write_at_version(version, 4.43, unk6, |w, v| w.write_i32(*v))?;

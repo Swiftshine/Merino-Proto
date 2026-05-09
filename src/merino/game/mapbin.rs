@@ -127,8 +127,8 @@ pub enum NodeData {
 
     MapItemSet {
         name: String32,
-        unk2: Vec2f,
-        unk3: Vec2f,
+        position: Vec3f,
+        unk3: f32,
         unk4: Vec2f,
         unk5: String32,
         unk6: Option<i32>,      // version >= 4.43

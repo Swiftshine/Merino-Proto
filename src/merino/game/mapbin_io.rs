@@ -115,8 +115,8 @@ impl MapDataNode {
 
             MapNodeType::MapItemSet => NodeData::MapItemSet {
                 name: reader.read_item_type()?,
-                unk2: reader.read_object::<Vec2f>()?,
-                unk3: reader.read_object::<Vec2f>()?,
+                position: reader.read_object::<Vec3f>()?,
+                unk3: reader.read_f32()?,
                 unk4: reader.read_object::<Vec2f>()?,
                 unk5: reader.read_object::<String32>()?,
                 unk6: reader.read_at_version(4.43, |r| r.read_i32())?,
