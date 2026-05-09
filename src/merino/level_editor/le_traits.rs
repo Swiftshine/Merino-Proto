@@ -219,3 +219,49 @@ where
         }
     }
 }
+
+impl Editable for Vec<Vec2f> {
+    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+        let render = |ui: &mut egui::Ui, values: &mut Vec<Vec2f>| {
+            for (index, value) in values.iter_mut().enumerate() {
+                ui.horizontal(|ui| {
+                    ui.label(format!("[{}]", index));
+                    value.edit_properties(ui, None);
+                });
+            }
+        };
+
+        if let Some(EditInfo::Label(label)) = info {
+            ui.collapsing(label, |ui| {
+                render(ui, self);
+            });
+        } else {
+            render(ui, self);
+        }
+    }
+}
+
+impl Editable for Vec<[Vec2f; 3]> {
+    fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
+        let render = |ui: &mut egui::Ui, values: &mut Vec<[Vec2f; 3]>| {
+            for (index, item) in values.iter_mut().enumerate() {
+                ui.collapsing(format!("[{}]", index), |ui| {
+                    for (i, value) in item.iter_mut().enumerate() {
+                        ui.horizontal(|ui| {
+                            ui.label(format!("{}.{}", index, i));
+                            value.edit_properties(ui, None);
+                        });
+                    }
+                });
+            }
+        };
+
+        if let Some(EditInfo::Label(label)) = info {
+            ui.collapsing(label, |ui| {
+                render(ui, self);
+            });
+        } else {
+            render(ui, self);
+        }
+    }
+}
