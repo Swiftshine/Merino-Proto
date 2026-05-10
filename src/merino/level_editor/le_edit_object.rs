@@ -358,7 +358,13 @@ impl MapDataNode {
             egui::Sense::click_and_drag(),
         );
 
-        Self::handle_selection(current_path, response.clicked(), commands, canvas_context);
+        Self::handle_selection(
+            current_path,
+            response.clicked_by(egui::PointerButton::Primary),
+            ui.input(|i| i.modifiers.shift),
+            commands,
+            canvas_context,
+        );
 
         if response.dragged_by(egui::PointerButton::Primary) {
             let mut pos2 = Vec2f::from(*position);
@@ -453,6 +459,7 @@ impl MapDataNode {
         Self::handle_selection(
             current_path,
             responses.iter().any(|r| r.clicked()),
+            ui.input(|i| i.modifiers.shift),
             commands,
             canvas_context,
         );
@@ -526,6 +533,7 @@ impl MapDataNode {
         Self::handle_selection(
             current_path,
             responses.iter().any(|r| r.clicked()),
+            ui.input(|i| i.modifiers.shift),
             commands,
             canvas_context,
         );
@@ -623,7 +631,13 @@ impl MapDataNode {
             }
         }
 
-        Self::handle_selection(current_path, any_clicked, commands, canvas_context);
+        Self::handle_selection(
+            current_path,
+            any_clicked,
+            ui.input(|i| i.modifiers.shift),
+            commands,
+            canvas_context,
+        );
     }
 
     fn edit_mapcircle(
@@ -749,6 +763,7 @@ impl MapDataNode {
     fn handle_selection(
         current_path: &NodePath,
         response_clicked: bool,
+        shift_held: bool,
         commands: &mut Vec<EditorCommand>,
         canvas_context: &mut CanvasContext,
     ) {
@@ -757,17 +772,26 @@ impl MapDataNode {
         }
 
         if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
-            // todo! make all selected nodes a child of the new parent
-            // but for now we're just going to work with clicking on this one
             commands.push(EditorCommand::move_node(
                 current_path.clone(),
                 parent_path.clone(),
             ));
-        } else if !canvas_context.selected_node_paths.contains(current_path) {
-            // not being looked for, just select
-            canvas_context
-                .selected_node_paths
-                .push(current_path.clone());
+        } else {
+            if shift_held {
+                // additive
+                if !canvas_context.selected_node_paths.contains(current_path) {
+                    // not being looked for, just select
+                    canvas_context
+                        .selected_node_paths
+                        .push(current_path.clone());
+                }
+            } else {
+                // replace
+                canvas_context.selected_node_paths.clear();
+                canvas_context
+                    .selected_node_paths
+                    .push(current_path.clone());
+            }
         }
     }
 
