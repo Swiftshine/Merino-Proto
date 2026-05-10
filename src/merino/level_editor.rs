@@ -233,6 +233,7 @@ pub struct CanvasContext {
     pub image_bank: ImageBank,
     // todo! make this toggleable
     pub display_dummy_terrain: bool,
+    pub display_squares_for_images: bool,
 }
 
 impl CanvasContext {

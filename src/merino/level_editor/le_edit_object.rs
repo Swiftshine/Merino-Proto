@@ -333,20 +333,24 @@ impl MapDataNode {
             canvas_context,
         );
 
+        let mut has_image = false;
         if let Some((tex, rotation)) =
             canvas_context
                 .image_bank
                 .resolve_image_for_node(ui.ctx(), node_type, name, params)
         {
             draw_rotated_image(&painter, tex.id(), square, rotation, egui::Color32::WHITE);
+            has_image = true;
         }
 
-        painter.rect_stroke(
-            square,
-            0.0,
-            egui::Stroke::new(1.0, color),
-            egui::StrokeKind::Middle,
-        );
+        if !(has_image && !canvas_context.display_squares_for_images) {
+            painter.rect_stroke(
+                square,
+                0.0,
+                egui::Stroke::new(1.0, color),
+                egui::StrokeKind::Middle,
+            );
+        }
 
         if !do_edit {
             return;
@@ -777,10 +781,10 @@ impl MapDataNode {
                 parent_path.clone(),
             ));
         } else {
+            // not being looked for, just select
             if shift_held {
                 // additive
                 if !canvas_context.selected_node_paths.contains(current_path) {
-                    // not being looked for, just select
                     canvas_context
                         .selected_node_paths
                         .push(current_path.clone());

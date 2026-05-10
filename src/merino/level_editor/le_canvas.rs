@@ -67,10 +67,15 @@ impl LevelEditor {
     }
 
     pub fn show_canvas_settings(&mut self, ui: &mut egui::Ui) {
-        ui.label(egui::RichText::new("Edit Settings").strong().underline())
-            .on_hover_text(
-                "Disabling any of these values will deselect every node of the corresponding type.",
-            );
+        // visibility/editability settings
+        ui.label(
+            egui::RichText::new("Visibility/Editability Settings")
+                .strong()
+                .underline(),
+        )
+        .on_hover_text(
+            "Disabling any of these values will deselect every node of the corresponding type.",
+        );
         let mut changed = false;
         for (node_type, settings) in self.canvas_context.node_edit_settings.iter_mut() {
             ui.horizontal(|ui| {
@@ -92,5 +97,16 @@ impl LevelEditor {
         if changed {
             self.canvas_context.prune_invalid_selections();
         }
+
+        ui.label(egui::RichText::new("Other Canvas settings").strong());
+
+        ui.checkbox(
+            &mut self.canvas_context.display_dummy_terrain,
+            "Display \"dummy_terrain\"",
+        );
+        ui.checkbox(
+            &mut self.canvas_context.display_squares_for_images,
+            "Display squares for object images",
+        );
     }
 }
