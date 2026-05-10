@@ -54,13 +54,13 @@
 - [x] object image previews
 - [ ] copy/paste
 - [ ] remove child without deleting node (move it to the root)
+- [x] object images
 
 ## Roadmap things
 
 - [ ] Model loading (hopefully from BFRES)
 - [ ] BSON utility
 - [ ] little endian (3DS) support
-- [ ] object image renders
 
 ## General code cleanliness for rewrite
 
