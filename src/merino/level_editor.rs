@@ -550,9 +550,8 @@ impl LevelEditor {
         });
 
         self.process_commands();
-        if self.editor_context.show_delete_confirmation_window {
-            self.show_delete_confirmation(ui.ctx());
-        }
+
+        self.show_delete_confirmation(ui.ctx());
 
         // temporarily move dock_state to avoid borrowing &mut self twice
         let mut dock_state =
@@ -642,6 +641,7 @@ impl LevelEditor {
         }
     }
 
+    /// Warning: DO NOT call EditorCommand::remove_node. It will result in an infinite loop.
     fn show_delete_confirmation(&mut self, ctx: &egui::Context) {
         let Some(delete) = &self.editor_context.pending_delete else {
             return;
@@ -655,49 +655,55 @@ impl LevelEditor {
             .get_node_at_path(&path)
             .map_or(false, |node| node.has_children());
 
-        let mut should_close = false;
-        let mut confirmed = false;
+        if self.editor_context.show_delete_confirmation_window {
+            let mut should_close = false;
+            let mut confirmed = false;
 
-        egui::Window::new("Confirm Deletion")
-            .collapsible(false)
-            .resizable(false)
-            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                if has_children {
-                    ui.colored_label(
-                        egui::Color32::LIGHT_RED,
-                        EmojiMessage::warning_msg("Warning: this child has children."),
-                    );
+            egui::Window::new("Confirm Deletion")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
+                .show(ctx, |ui| {
+                    if has_children {
+                        ui.colored_label(
+                            egui::Color32::LIGHT_RED,
+                            EmojiMessage::warning_msg("Warning: this child has children."),
+                        );
 
-                    ui.label("Deleting it will remove all nested nodes.");
-                }
-
-                ui.label("Are you sure you want to delete this node?");
-
-                ui.add_space(10.0);
-
-                ui.horizontal(|ui| {
-                    if ui.button(EmojiMessage::cross_msg("Cancel")).clicked() {
-                        should_close = true;
+                        ui.label("Deleting it will remove all nested nodes.");
                     }
 
-                    if ui.button(EmojiMessage::check_msg("Confirm")).clicked() {
-                        confirmed = true;
-                        should_close = true;
-                    }
+                    ui.label("Are you sure you want to delete this node?");
+
+                    ui.add_space(10.0);
+
+                    ui.horizontal(|ui| {
+                        if ui.button(EmojiMessage::cross_msg("Cancel")).clicked() {
+                            should_close = true;
+                        }
+
+                        if ui.button(EmojiMessage::check_msg("Confirm")).clicked() {
+                            confirmed = true;
+                            should_close = true;
+                        }
+                    });
                 });
-            });
+            if confirmed {
+                self.file_context.mapdata.remove_node_at_path(&path);
 
-        if confirmed {
+                self.canvas_context
+                    .selected_node_paths
+                    .retain(|p| p != &path);
+                if should_close {
+                    self.editor_context.pending_delete = None;
+                }
+            }
+        } else {
             self.file_context.mapdata.remove_node_at_path(&path);
 
             self.canvas_context
                 .selected_node_paths
                 .retain(|p| p != &path);
-        }
-
-        if should_close {
-            self.editor_context.pending_delete = None;
         }
     }
 }
