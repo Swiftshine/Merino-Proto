@@ -231,7 +231,7 @@ pub struct CanvasContext {
     pub target: Option<CanvasTarget>,
     pub node_edit_settings: EnumMap<MapNodeType, NodeEditSettings>,
     pub image_bank: ImageBank,
-    // todo! make this toggleable
+    // settings
     pub display_dummy_terrain: bool,
     pub display_squares_for_images: bool,
 }
