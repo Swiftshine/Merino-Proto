@@ -61,6 +61,15 @@ pub enum EditorCommand {
     RemoveNode {
         path: NodePath,
     },
+    SelectNode {
+        path: NodePath,
+    },
+    AddToSelection {
+        path: NodePath,
+    },
+    // SelectParent {
+    //     child: NodePath,
+    // },
 }
 
 impl EditorCommand {
@@ -71,7 +80,24 @@ impl EditorCommand {
     pub fn remove_node(path: NodePath) -> Self {
         Self::RemoveNode { path }
     }
+
+    /// Adds to node selection
+    pub fn add_to_selection(path: NodePath) -> Self {
+        Self::AddToSelection { path }
+    }
+
+    /// Clears the node selection and sets this one
+    pub fn select_node(path: NodePath) -> Self {
+        Self::SelectNode { path }
+    }
+
+    // pub fn select_parent_of(child: NodePath) -> Self {
+    //     Self::SelectParent { child }
+    // }
 }
+
+// todo! maybe something like EditorRequest that queries something?
+// although the result would only be obtained on the next frame
 
 pub struct NodeEditSettings {
     pub visible: bool,
@@ -568,6 +594,19 @@ impl LevelEditor {
                     EditorCommand::RemoveNode { path } => {
                         self.editor_context.pending_delete =
                             Some(DeleteConfirmation { path: path });
+                    }
+
+                    EditorCommand::SelectNode { path } => {
+                        self.canvas_context.selected_node_paths.clear();
+                        self.canvas_context.selected_node_paths.push(path);
+                    }
+
+                    EditorCommand::AddToSelection { path } => {
+                        let paths = &mut self.canvas_context.selected_node_paths;
+
+                        if !paths.contains(&path) {
+                            paths.push(path);
+                        }
                     }
                 }
             }

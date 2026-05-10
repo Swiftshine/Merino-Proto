@@ -784,17 +784,10 @@ impl MapDataNode {
             // not being looked for, just select
             if shift_held {
                 // additive
-                if !canvas_context.selected_node_paths.contains(current_path) {
-                    canvas_context
-                        .selected_node_paths
-                        .push(current_path.clone());
-                }
+                commands.push(EditorCommand::add_to_selection(current_path.clone()));
             } else {
                 // replace
-                canvas_context.selected_node_paths.clear();
-                canvas_context
-                    .selected_node_paths
-                    .push(current_path.clone());
+                commands.push(EditorCommand::select_node(current_path.clone()));
             }
         }
     }
