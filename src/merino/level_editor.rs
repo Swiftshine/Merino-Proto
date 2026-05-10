@@ -595,8 +595,6 @@ impl LevelEditor {
             .resizable(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .show(ctx, |ui| {
-                // todo! replace the implementation in le_edit_field.rs with this one
-
                 if has_children {
                     ui.colored_label(
                         egui::Color32::LIGHT_RED,
