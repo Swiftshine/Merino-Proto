@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
 
@@ -155,35 +155,24 @@ impl<'a> Reader<'a> {
     }
 
     // accessors
-    fn get_string_by_index(
-        &self,
-        list: &[String32],
-        index: usize,
-        label: &str,
-    ) -> Result<String32> {
-        list.get(index).cloned().ok_or_else(|| {
-            anyhow!(
-                "{} index {} out of bounds (len: {})",
-                label,
-                index,
-                list.len()
-            )
-        })
+    fn get_string_by_index(&self, list: &[String32], index: usize) -> String32 {
+        // just give it a blank one
+        list.get(index).cloned().unwrap_or_default()
     }
 
     pub fn read_object_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.object_types, index, "Object")
+        Ok(self.get_string_by_index(&self.object_types, index))
     }
 
     pub fn read_item_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.item_types, index, "Item")
+        Ok(self.get_string_by_index(&self.item_types, index))
     }
 
     pub fn read_collision_type(&mut self) -> Result<String32> {
         let index = self.read_u32()? as usize;
-        self.get_string_by_index(&self.collision_types, index, "Collision")
+        Ok(self.get_string_by_index(&self.collision_types, index))
     }
 
     // pub fn read_unk_type_1_type(&mut self) -> Result<String32> {
