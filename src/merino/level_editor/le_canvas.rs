@@ -108,5 +108,11 @@ impl LevelEditor {
             &mut self.canvas_context.display_squares_for_images,
             "Display squares for object images",
         );
+
+        ui.label(egui::RichText::new("Editor Settings").strong());
+        ui.checkbox(
+            &mut self.editor_context.show_delete_confirmation_window,
+            "Show delete confirmation window",
+        );
     }
 }

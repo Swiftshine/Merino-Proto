@@ -183,10 +183,20 @@ pub struct DeleteConfirmation {
     path: NodePath,
 }
 
-#[derive(Default)]
 pub struct EditorContext {
     pub commands: Vec<EditorCommand>,
-    pub pending_delete: Option<DeleteConfirmation>,
+    pending_delete: Option<DeleteConfirmation>,
+    pub show_delete_confirmation_window: bool,
+}
+
+impl Default for EditorContext {
+    fn default() -> Self {
+        Self {
+            commands: Default::default(),
+            pending_delete: None,
+            show_delete_confirmation_window: true,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -540,7 +550,9 @@ impl LevelEditor {
         });
 
         self.process_commands();
-        self.show_delete_confirmation(ui.ctx());
+        if self.editor_context.show_delete_confirmation_window {
+            self.show_delete_confirmation(ui.ctx());
+        }
 
         // temporarily move dock_state to avoid borrowing &mut self twice
         let mut dock_state =
