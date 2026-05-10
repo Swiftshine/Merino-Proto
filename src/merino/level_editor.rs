@@ -446,6 +446,13 @@ impl LevelEditor {
             egui::MenuBar::new().ui(ui, |ui| {
                 // file submenu
                 if ui.button("Open").clicked() {
+                    if let Ok(_) = self.open_file() {
+                        // clear any selections
+                        self.canvas_context.selected_node_paths.clear();
+                        self.canvas_context.target = None;
+                        self.canvas_context.camera = CanvasCamera::default();
+                        self.object_property_editor_context.node_path_to_remove = None;
+                    }
                     let _ = self.open_file();
                 }
 

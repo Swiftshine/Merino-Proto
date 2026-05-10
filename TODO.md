@@ -39,7 +39,7 @@
     - [x] object addition
     - [x] object removal
 - [x] Level saving
-- [ ] clear settings when loading new level
+- [x] clear selections when loading new level
 
 ## QOL things
 
