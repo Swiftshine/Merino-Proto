@@ -310,7 +310,6 @@ impl FileContext {
 
 #[derive(Default)]
 pub struct ObjectPropertyEditorContext {
-    pub node_path_to_remove: Option<NodePath>,
     pub parameter_objects: Vec<ParameterObject>,
 }
 
@@ -453,7 +452,7 @@ impl LevelEditor {
                         self.canvas_context.selected_node_paths.clear();
                         self.canvas_context.target = None;
                         self.canvas_context.camera = CanvasCamera::default();
-                        self.object_property_editor_context.node_path_to_remove = None;
+                        self.editor_context.commands.clear();
                     }
                 }
 

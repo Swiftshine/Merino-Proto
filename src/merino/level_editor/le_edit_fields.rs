@@ -4,8 +4,8 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapDataNode, MapNodeType, NodeData},
     level_editor::{
-        CanvasContext, CanvasTarget, EditorCommand, EditorContext, FileContext, LevelEditor,
-        NodeChildType, NodePath, ObjectPropertyEditorContext,
+        CanvasContext, CanvasTarget, EditorCommand, EditorContext, LevelEditor, NodeChildType,
+        NodePath, ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
 };
@@ -122,26 +122,11 @@ impl LevelEditor {
 
         // view children
 
-        Self::edit_child_ui(
-            ui,
-            object_property_editor_context,
-            canvas_context,
-            editor_context,
-            node,
-            &node_path,
-        );
-
-        Self::confirm_child_deletion(
-            ui,
-            file_context,
-            object_property_editor_context,
-            canvas_context,
-        );
+        Self::edit_child_ui(ui, canvas_context, editor_context, node, &node_path);
     }
 
     fn edit_child_ui(
         ui: &mut egui::Ui,
-        prop_context: &mut ObjectPropertyEditorContext,
         canvas_context: &mut CanvasContext,
         editor_context: &mut EditorContext,
         node: &mut MapDataNode,
@@ -176,7 +161,9 @@ impl LevelEditor {
                                             {
                                                 let mut del_path = node_path.clone();
                                                 del_path.push((child_type, index));
-                                                prop_context.node_path_to_remove = Some(del_path);
+                                                editor_context
+                                                    .commands
+                                                    .push(EditorCommand::remove_node(del_path));
                                             }
 
                                             if ui
@@ -238,63 +225,6 @@ impl LevelEditor {
         if let Some(path) = child_to_select {
             canvas_context.selected_node_paths.clear();
             canvas_context.selected_node_paths.push(path);
-        }
-    }
-
-    fn confirm_child_deletion(
-        ui: &mut egui::Ui,
-        file_context: &mut FileContext,
-        prop_context: &mut ObjectPropertyEditorContext,
-        canvas_context: &mut CanvasContext,
-    ) {
-        if let Some(path) = &prop_context.node_path_to_remove {
-            let mut should_close = false;
-            let mut confirmed = false;
-            let mapdata = &mut file_context.mapdata;
-
-            // check if the node being deleted has its own children
-            let has_children = mapdata
-                .get_node_at_path(path)
-                .map(|n| n.has_children())
-                .unwrap_or(false);
-
-            egui::Window::new("Confirm Deletion")
-                .collapsible(false)
-                .resizable(false)
-                .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
-                .show(ui.ctx(), |ui| {
-                    if has_children {
-                        // todo! make warning togglable
-                        ui.colored_label(
-                            egui::Color32::LIGHT_RED,
-                            EmojiMessage::warning_msg("Warning: this child has children."),
-                        );
-                        ui.label("Deleting it will remove all nested nodes.");
-                    }
-
-                    ui.label("Are you sure you want to delete this node?");
-
-                    ui.add_space(10.0);
-                    ui.horizontal(|ui| {
-                        if ui.button(EmojiMessage::cross_msg("Cancel")).clicked() {
-                            should_close = true;
-                        }
-
-                        if ui.button(EmojiMessage::check_msg("Confirm")).clicked() {
-                            confirmed = true;
-                            should_close = true;
-                        }
-                    });
-                });
-
-            if confirmed {
-                mapdata.remove_node_at_path(path);
-                canvas_context.selected_node_paths.retain(|p| p != path);
-            }
-
-            if should_close {
-                prop_context.node_path_to_remove = None;
-            }
         }
     }
 
