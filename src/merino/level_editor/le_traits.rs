@@ -116,12 +116,6 @@ impl<const N: usize> Editable for Params<N> {
                             ui.label(desc);
                         }
 
-                        if let Some(note) = &param.note
-                            && !note.is_empty()
-                        {
-                            ui.label(format!("Note: {note}"));
-                        }
-
                         match &param.data_type {
                             ParameterDataType::Int => {
                                 if let Some(val) = self.int_values.get_mut(param.slot) {
