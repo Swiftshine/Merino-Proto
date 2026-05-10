@@ -8,14 +8,25 @@
                     "data_type": "int",
                     "slot": 0,
                     "description": "[placeholder description]",
-                    "note": "An optional note."
+                    "notes": [
+                        "A set of optional notes.",
+                        "You can have more than one!"
+                    ]
                 }
             }
         }
     },
     "MapItemSet": {
         "[placeholder MapItem]": {
-            "description": "The format for any structure that contains Params<N> is more or less the same."
+            "description": "The format for any structure that contains Params<N> is more or less the same.",
+            "parameters": {
+                "Parameter 1": {
+                    "data_type": "int",
+                    "slot": 0,
+                    "description": "[placeholder description]",
+                    "note": "You can also just have one note."
+                }
+            }
         }
     },
     "MapEnemySet": {

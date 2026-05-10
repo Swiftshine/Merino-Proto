@@ -46,7 +46,7 @@ pub struct Parameter {
     pub data_type: ParameterDataType,
     pub slot: usize,
     pub description: Option<String>,
-    pub note: Option<String>,
+    pub notes: Option<Vec<String>>,
     pub dropdown_options: Option<Vec<DropdownOption>>,
 }
 
@@ -106,7 +106,20 @@ impl LevelEditor {
                                 .get("description")
                                 .and_then(|v| v.as_str())
                                 .map(String::from);
-                            let note = p_val.get("note").and_then(|v| v.as_str()).map(String::from);
+
+                            let notes = if let Some(arr) =
+                                p_val.get("notes").and_then(|v| v.as_array())
+                            {
+                                Some(
+                                    arr.iter()
+                                        .filter_map(|v| v.as_str().map(String::from))
+                                        .collect::<Vec<String>>(),
+                                )
+                            } else if let Some(note) = p_val.get("note").and_then(|v| v.as_str()) {
+                                Some(vec![note.to_string()])
+                            } else {
+                                None
+                            };
 
                             // dropdown logic
                             let dropdown_options = match &data_type {
@@ -131,7 +144,7 @@ impl LevelEditor {
                                 data_type,
                                 slot,
                                 description,
-                                note,
+                                notes,
                                 dropdown_options,
                             })
                         })

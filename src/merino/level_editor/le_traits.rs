@@ -109,7 +109,7 @@ impl<const N: usize> Editable for Params<N> {
         if let Some(EditInfo::Params(param_object)) = info {
             ui.collapsing("Parameters", |ui| {
                 for param in param_object.parameters.iter() {
-                    let resp = ui.collapsing(&param.name, |ui| {
+                    let mut resp = ui.collapsing(&param.name, |ui| {
                         if let Some(desc) = &param.description
                             && !desc.is_empty()
                         {
@@ -149,11 +149,17 @@ impl<const N: usize> Editable for Params<N> {
                                 if let Some(options) = &param.dropdown_options
                                     && let Some(val) = self.int_values.get_mut(param.slot)
                                 {
+                                    let label = format!(
+                                        "({}) {}",
+                                        options[*val as usize].value, &options[*val as usize].key
+                                    );
                                     egui::ComboBox::from_label("Value")
-                                        .selected_text(&options[*val as usize].key)
+                                        .selected_text(label)
                                         .show_ui(ui, |ui| {
                                             for option in options.iter() {
-                                                ui.selectable_value(val, option.value, &option.key);
+                                                let label =
+                                                    format!("({}) {}", option.value, &option.key);
+                                                ui.selectable_value(val, option.value, label);
                                             }
                                         });
                                 }
@@ -162,10 +168,21 @@ impl<const N: usize> Editable for Params<N> {
                         }
                     });
 
-                    if let Some(note) = &param.note
-                        && !note.is_empty()
+                    if let Some(notes) = &param.notes
+                        && !notes.is_empty()
                     {
-                        resp.header_response.on_hover_text(note);
+                        let tooltip = if notes.len() == 1 {
+                            notes[0].clone()
+                        } else {
+                            // bullet points
+                            notes
+                                .iter()
+                                .map(|n| format!("• {n}"))
+                                .collect::<Vec<_>>()
+                                .join("\n")
+                        };
+
+                        resp.header_response = resp.header_response.on_hover_text(tooltip);
                     }
                 }
             });
