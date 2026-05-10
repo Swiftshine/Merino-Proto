@@ -149,16 +149,19 @@ impl<const N: usize> Editable for Params<N> {
                                 if let Some(options) = &param.dropdown_options
                                     && let Some(val) = self.int_values.get_mut(param.slot)
                                 {
-                                    let label = format!(
-                                        "({}) {}",
-                                        options[*val as usize].value, &options[*val as usize].key
-                                    );
+                                    let selected_text = options
+                                        .iter()
+                                        .find(|o| o.value == *val)
+                                        .map(|o| format!("({}) {}", o.value, o.key))
+                                        .unwrap_or_else(|| format!("Unknown ({})", *val));
+
                                     egui::ComboBox::from_label("Value")
-                                        .selected_text(label)
+                                        .selected_text(selected_text)
                                         .show_ui(ui, |ui| {
                                             for option in options.iter() {
                                                 let label =
-                                                    format!("({}) {}", option.value, &option.key);
+                                                    format!("({}) {}", option.value, option.key);
+
                                                 ui.selectable_value(val, option.value, label);
                                             }
                                         });
