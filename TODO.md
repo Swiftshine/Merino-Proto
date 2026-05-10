@@ -51,6 +51,9 @@
     - this would require a number of different fields for file version (we could just hardcode it to latest)
     - note: no need to allow the user to add a `MapSet` because it could just be pre-inited
 - [ ] selection rect
+    - [x] draw rect
+    - [x] select objects
+    - [ ] drag objects
 - [x] object image previews
 - [ ] copy/paste
 - [x] remove child without deleting node (move it to the root)

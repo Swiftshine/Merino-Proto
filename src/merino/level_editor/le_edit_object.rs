@@ -6,7 +6,7 @@ use crate::merino::{
 const SMALL_SQUARE_SIZE: f32 = 0.5;
 const SQUARE_SIZE: f32 = 2.0;
 
-const SELECTION_HIGHLIGHT: egui::Color32 =
+pub const SELECTION_HIGHLIGHT: egui::Color32 =
     egui::Color32::from_rgba_unmultiplied_const(0xFF, 0xFF, 0xFF, 0x10);
 
 /// A list of objects to not display.
@@ -362,6 +362,7 @@ impl MapDataNode {
             egui::Sense::click_and_drag(),
         );
 
+        // clicked
         Self::handle_selection(
             current_path,
             response.clicked_by(egui::PointerButton::Primary),
@@ -369,6 +370,11 @@ impl MapDataNode {
             commands,
             canvas_context,
         );
+
+        // marquee
+        if canvas_context.rect_in_marquee(square) {
+            commands.push(EditorCommand::add_to_selection(current_path.clone()));
+        }
 
         if response.dragged_by(egui::PointerButton::Primary) {
             let mut pos2 = Vec2f::from(*position);
@@ -460,6 +466,7 @@ impl MapDataNode {
 
         let responses = [&start_resp, &end_resp];
 
+        // clicked
         Self::handle_selection(
             current_path,
             responses.iter().any(|r| r.clicked()),
@@ -467,6 +474,11 @@ impl MapDataNode {
             commands,
             canvas_context,
         );
+
+        // marquee
+        if canvas_context.rect_in_marquee(rect) {
+            commands.push(EditorCommand::add_to_selection(current_path.clone()));
+        }
 
         if start_resp.dragged_by(egui::PointerButton::Primary) {
             Self::drag_vec2f(bounds_start, &start_resp, canvas_context);
@@ -534,6 +546,7 @@ impl MapDataNode {
 
         let responses = [&start_resp, &end_resp];
 
+        // clicked
         Self::handle_selection(
             current_path,
             responses.iter().any(|r| r.clicked()),
@@ -541,6 +554,14 @@ impl MapDataNode {
             commands,
             canvas_context,
         );
+
+        // marquee
+        if [&start_rect, &end_rect]
+            .iter()
+            .any(|rect| canvas_context.rect_in_marquee(**rect))
+        {
+            commands.push(EditorCommand::add_to_selection(current_path.clone()));
+        }
 
         let mut dragged = false;
 
@@ -608,8 +629,15 @@ impl MapDataNode {
 
         let mut any_clicked = false;
 
+        let mut in_marquee = false;
         for (index, point) in points.iter_mut().enumerate() {
             let screen_point = screen_points[index];
+
+            // marquee
+            if canvas_context.point_in_marquee(screen_point) && !in_marquee {
+                in_marquee = true;
+                commands.push(EditorCommand::add_to_selection(current_path.clone()));
+            }
 
             let handle_rect =
                 Self::make_handle_rect(screen_point, SMALL_SQUARE_SIZE, canvas_context);
@@ -704,6 +732,7 @@ impl MapDataNode {
         painter.rect_filled(center_handle, 0.0, color);
         painter.rect_filled(radius_handle, 0.0, color);
 
+        // clicked
         if center_resp.clicked() || radius_resp.clicked() {
             if let Some(CanvasTarget::Search(parent_path)) = &canvas_context.target {
                 commands.push(EditorCommand::move_node(
@@ -715,6 +744,12 @@ impl MapDataNode {
                     .selected_node_paths
                     .push(current_path.clone());
             }
+        }
+
+        // marquee
+        // only selecting the center
+        if canvas_context.point_in_marquee(center) {
+            commands.push(EditorCommand::add_to_selection(current_path.clone()));
         }
 
         if center_resp.dragged_by(egui::PointerButton::Primary) {

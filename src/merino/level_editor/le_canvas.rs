@@ -1,4 +1,4 @@
-use crate::merino::level_editor::LevelEditor;
+use crate::merino::level_editor::{LevelEditor, le_edit_object::SELECTION_HIGHLIGHT};
 
 impl LevelEditor {
     pub fn show_canvas(&mut self, ui: &mut egui::Ui) {
@@ -14,8 +14,46 @@ impl LevelEditor {
         let painter = ui.painter_at(rect);
         painter.rect_filled(rect, 0.0, egui::Color32::BLACK);
 
+        // start marquee
+        if response.drag_started_by(egui::PointerButton::Primary) {
+            if let Some(pos) = response.interact_pointer_pos() {
+                self.canvas_context.marquee_start = Some(pos);
+                self.canvas_context.marquee_end = Some(pos);
+            }
+        }
+
+        // update marquee
+        if response.dragged_by(egui::PointerButton::Primary) {
+            if let Some(pos) = response.interact_pointer_pos() {
+                self.canvas_context.marquee_end = Some(pos);
+            }
+        }
+
+        // draw marquee
+        if let (Some(start), Some(end)) = (
+            self.canvas_context.marquee_start,
+            self.canvas_context.marquee_end,
+        ) {
+            let marquee_rect = egui::Rect::from_two_pos(start, end);
+
+            painter.rect_filled(marquee_rect, 0.0, SELECTION_HIGHLIGHT);
+
+            painter.rect_stroke(
+                marquee_rect,
+                0.0,
+                egui::Stroke::new(1.0, egui::Color32::WHITE),
+                egui::StrokeKind::Outside,
+            );
+        }
+
         // edit objects
         self.edit_all_nodes(ui, rect);
+
+        // end marquee
+        if response.drag_stopped_by(egui::PointerButton::Primary) {
+            self.canvas_context.marquee_start = None;
+            self.canvas_context.marquee_end = None;
+        }
 
         if response.hovered() {
             // add objects

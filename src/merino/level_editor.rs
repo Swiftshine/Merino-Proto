@@ -267,6 +267,8 @@ pub struct CanvasContext {
     pub target: Option<CanvasTarget>,
     pub node_edit_settings: EnumMap<MapNodeType, NodeEditSettings>,
     pub image_bank: ImageBank,
+    pub marquee_start: Option<egui::Pos2>,
+    pub marquee_end: Option<egui::Pos2>,
     // settings
     pub display_dummy_terrain: bool,
     pub display_squares_for_images: bool,
@@ -297,6 +299,25 @@ impl CanvasContext {
                 settings.visible && settings.editable
             })
         });
+    }
+
+    pub fn marquee_rect(&self) -> Option<egui::Rect> {
+        match (self.marquee_start, self.marquee_end) {
+            (Some(start), Some(end)) => Some(egui::Rect::from_two_pos(start, end)),
+            _ => None,
+        }
+    }
+
+    pub fn point_in_marquee(&self, check_point: egui::Pos2) -> bool {
+        self.marquee_rect()
+            .map(|rect| rect.contains(check_point))
+            .unwrap_or(false)
+    }
+
+    pub fn rect_in_marquee(&self, check_rect: egui::Rect) -> bool {
+        self.marquee_rect()
+            .map(|rect| rect.contains_rect(check_rect))
+            .unwrap_or(false)
     }
 }
 
