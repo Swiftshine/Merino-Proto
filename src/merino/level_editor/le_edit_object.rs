@@ -821,7 +821,7 @@ fn draw_rotated_image(
 
     let center = rect.center();
 
-    let rotation = egui::emath::Rot2::from_angle(rotation_degrees.to_radians());
+    let rotation = egui::emath::Rot2::from_angle(-rotation_degrees.to_radians());
 
     let rotate = |p: Pos2| center + rotation * (p - center);
 
