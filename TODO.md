@@ -51,6 +51,8 @@
     - this would require a number of different fields for file version (we could just hardcode it to latest)
     - note: no need to allow the user to add a `MapSet` because it could just be pre-inited
 - [ ] selection rect
+- [x] object image previews
+- [ ] copy/paste
 
 ## Roadmap things
 

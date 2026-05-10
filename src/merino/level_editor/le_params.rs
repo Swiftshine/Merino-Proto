@@ -56,6 +56,7 @@ pub struct ParameterObject {
     pub name: String,
     pub description: Option<String>,
     pub display_name: Option<String>,
+    pub note: Option<String>,
     pub parameters: Vec<Parameter>,
 }
 
@@ -90,6 +91,7 @@ impl LevelEditor {
                 param_object.name = obj_name.to_owned();
                 param_object.description = props["description"].as_str().map(String::from);
                 param_object.display_name = props["display_name"].as_str().map(String::from);
+                param_object.note = props["note"].as_str().map(String::from);
 
                 if let Some(params) = props.get("parameters").and_then(|v| v.as_object()) {
                     param_object.parameters = params

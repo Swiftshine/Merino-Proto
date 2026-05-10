@@ -298,7 +298,7 @@ impl LevelEditor {
         } = node_data
         {
             // todo!() search for display name and do that
-
+            // also todo!() search for note and add that
             name.edit_properties(ui, EditInfo::label("Name"));
             position.edit_properties(ui, EditInfo::label("Position"));
             unk3.edit_properties(ui, EditInfo::label("Unk 3"));
