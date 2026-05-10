@@ -4,8 +4,8 @@ use crate::merino::{
     common::emoji::*,
     game::mapbin::{MapDataNode, MapNodeType, NodeData},
     level_editor::{
-        CanvasContext, CanvasTarget, EditorCommand, FileContext, LevelEditor, NodeChildType,
-        NodePath, ObjectPropertyEditorContext,
+        CanvasContext, CanvasTarget, EditorCommand, EditorContext, FileContext, LevelEditor,
+        NodeChildType, NodePath, ObjectPropertyEditorContext,
         le_traits::{EditInfo, Editable},
     },
 };
@@ -16,6 +16,7 @@ impl LevelEditor {
             file_context,
             object_property_editor_context,
             canvas_context,
+            editor_context,
             ..
         } = self;
 
@@ -33,12 +34,13 @@ impl LevelEditor {
                     .on_hover_text("Delete node")
                     .clicked()
                 {
-                    self.editor_context
+                    editor_context
                         .commands
                         .push(EditorCommand::remove_node(node_path.clone()));
                 }
             });
         });
+
         egui::ScrollArea::vertical()
             .max_height(400.0)
             .show(ui, |ui| match node.node_type {
@@ -121,6 +123,7 @@ impl LevelEditor {
             ui,
             object_property_editor_context,
             canvas_context,
+            editor_context,
             node,
             &node_path,
         );
@@ -137,6 +140,7 @@ impl LevelEditor {
         ui: &mut egui::Ui,
         prop_context: &mut ObjectPropertyEditorContext,
         canvas_context: &mut CanvasContext,
+        editor_context: &mut EditorContext,
         node: &mut MapDataNode,
         node_path: &NodePath,
     ) {
@@ -164,7 +168,7 @@ impl LevelEditor {
                                         |ui| {
                                             if ui
                                                 .button(EmojiMessage::discard())
-                                                .on_hover_text("Delete node")
+                                                .on_hover_text("Delete child")
                                                 .clicked()
                                             {
                                                 let mut del_path = node_path.clone();
@@ -173,8 +177,25 @@ impl LevelEditor {
                                             }
 
                                             if ui
+                                                .button(EmojiMessage::cross())
+                                                .on_hover_text("Detach child")
+                                                .clicked()
+                                            {
+                                                let mut child_path = node_path.clone();
+                                                child_path.push((child_type, index));
+
+                                                // set the parent of the child to root
+                                                editor_context.commands.push(
+                                                    EditorCommand::move_node(
+                                                        child_path,
+                                                        Vec::new(), // root
+                                                    ),
+                                                );
+                                            }
+
+                                            if ui
                                                 .button(EmojiMessage::target())
-                                                .on_hover_text("Go to node")
+                                                .on_hover_text("Go to child")
                                                 .clicked()
                                             {
                                                 let mut new_path = node_path.clone();

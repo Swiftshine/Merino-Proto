@@ -53,7 +53,7 @@
 - [ ] selection rect
 - [x] object image previews
 - [ ] copy/paste
-- [ ] remove child without deleting node (move it to the root)
+- [x] remove child without deleting node (move it to the root)
 - [x] object images
 
 ## Roadmap things
