@@ -446,7 +446,9 @@ impl LevelEditor {
             egui::MenuBar::new().ui(ui, |ui| {
                 // file submenu
                 if ui.button("Open").clicked() {
-                    if let Ok(_) = self.open_file() {
+                    if let Ok(opened) = self.open_file()
+                        && opened
+                    {
                         // clear any selections
                         self.canvas_context.selected_node_paths.clear();
                         self.canvas_context.target = None;

@@ -13,7 +13,8 @@ const OBJECTDATA_FILE: &str = "objectdata.json";
 const IMAGEDATA_FILE: &str = "imagedata.json";
 
 impl LevelEditor {
-    pub fn open_file(&mut self) -> Result<()> {
+    // returns if the file was actually opened
+    pub fn open_file(&mut self) -> Result<bool> {
         // ask user to open file
         // for now we're opening the mapbin directly
         if let Some(path) = FileDialog::new()
@@ -34,9 +35,11 @@ impl LevelEditor {
                     dbg!(e);
                 }
             }
-        }
 
-        Ok(())
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 
     pub fn save_file(&mut self) -> Result<()> {
