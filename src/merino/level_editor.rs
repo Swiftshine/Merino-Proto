@@ -453,7 +453,6 @@ impl LevelEditor {
                         self.canvas_context.camera = CanvasCamera::default();
                         self.object_property_editor_context.node_path_to_remove = None;
                     }
-                    let _ = self.open_file();
                 }
 
                 if ui
