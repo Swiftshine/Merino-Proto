@@ -67,9 +67,9 @@ pub enum EditorCommand {
     AddToSelection {
         path: NodePath,
     },
-    // SelectParent {
-    //     child: NodePath,
-    // },
+    SelectParent {
+        child: NodePath,
+    },
 }
 
 impl EditorCommand {
@@ -91,9 +91,9 @@ impl EditorCommand {
         Self::SelectNode { path }
     }
 
-    // pub fn select_parent_of(child: NodePath) -> Self {
-    //     Self::SelectParent { child }
-    // }
+    pub fn select_parent_of(child: NodePath) -> Self {
+        Self::SelectParent { child }
+    }
 }
 
 // todo! maybe something like EditorRequest that queries something?
@@ -585,6 +585,9 @@ impl LevelEditor {
             // take all commands, leaving empty vec
             let commands = std::mem::take(&mut self.editor_context.commands);
 
+            // process these next frame
+            let mut additional_commands = Vec::new();
+
             for command in commands {
                 match command {
                     EditorCommand::MoveNode { child, new_parent } => {
@@ -608,8 +611,22 @@ impl LevelEditor {
                             paths.push(path);
                         }
                     }
+
+                    EditorCommand::SelectParent { child } => {
+                        if let Some(parent_node_path) =
+                            self.file_context.mapdata.root.find_parent_path(&child)
+                        {
+                            // don't select root
+                            if !parent_node_path.is_empty() {
+                                additional_commands
+                                    .push(EditorCommand::select_node(parent_node_path));
+                            }
+                        }
+                    }
                 }
             }
+
+            self.editor_context.commands = additional_commands;
         }
     }
 

@@ -372,6 +372,53 @@ pub struct MapDataNode {
 }
 
 impl MapDataNode {
+    pub fn find_parent_path(&self, target: &NodePath) -> Option<NodePath> {
+        fn recurse(
+            node: &MapDataNode,
+            current_path: &mut NodePath,
+            target: &NodePath,
+        ) -> Option<NodePath> {
+            // iterate all child collections
+            let child_sets = [
+                (NodeChildType::MapPolySet, &node.children_mappolyset),
+                (NodeChildType::MapObjSet, &node.children_mapobjset),
+                (NodeChildType::MapItemSet, &node.children_mapitemset),
+                (NodeChildType::MapEnemySet, &node.children_mapenemyset),
+                (NodeChildType::MapLocator, &node.children_maplocator),
+                (NodeChildType::MapPath, &node.children_mappath),
+                (NodeChildType::MapRect, &node.children_maprect),
+                (NodeChildType::MapCircle, &node.children_mapcircle),
+                (NodeChildType::MapTerrain, &node.children_mapterrain),
+            ];
+
+            for (child_type, children_opt) in child_sets {
+                if let Some(children) = children_opt {
+                    for (index, child) in children.iter().enumerate() {
+                        current_path.push((child_type, index));
+
+                        // if this child is the target,
+                        // current_path without the last entry is the parent
+                        if current_path == target {
+                            let mut parent = current_path.clone();
+                            parent.pop();
+                            return Some(parent);
+                        }
+
+                        if let Some(found) = recurse(child, current_path, target) {
+                            return Some(found);
+                        }
+
+                        current_path.pop();
+                    }
+                }
+            }
+
+            None
+        }
+
+        recurse(self, &mut Vec::new(), target)
+    }
+
     // pub fn remove_child(&mut self, child_type: NodeChildType, index: usize) -> Option<MapDataNode> {
     //     let vec = self.children_of_type_vec_mut(child_type)?;
     //     if index < vec.len() {

@@ -54,6 +54,7 @@
 - [x] object image previews
 - [ ] copy/paste
 - [x] remove child without deleting node (move it to the root)
+- [x] select parent (do nothing if the parent is root)
 - [x] object images
 
 ## Roadmap things
@@ -71,3 +72,5 @@
 - get rid of redundant functionality
 - use functions to generate enum variants
 - separate tabs into separate folders
+- use message system
+    - commands already works this way, but rename it to "message" or something along those lines and add requests that either 1) can be evaluated next frame or 2) need to be evaluated right now

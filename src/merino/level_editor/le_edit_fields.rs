@@ -26,10 +26,11 @@ impl LevelEditor {
             None => return,
         };
 
-        // don't allow user to attempt to delete the root node
-        if node.node_type != MapNodeType::MapSet {
-            ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("Properties").strong());
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Properties").strong());
+            // - don't allow user to attempt to delete the root node
+            // - the root node doesn't have a parent
+            if node.node_type != MapNodeType::MapSet {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui
                         .button(EmojiMessage::discard())
@@ -40,9 +41,19 @@ impl LevelEditor {
                             .commands
                             .push(EditorCommand::remove_node(node_path.clone()));
                     }
+
+                    if ui
+                        .button(EmojiMessage::target())
+                        .on_hover_text("Go to parent")
+                        .clicked()
+                    {
+                        editor_context
+                            .commands
+                            .push(EditorCommand::select_parent_of(node_path.clone()));
+                    }
                 });
-            });
-        }
+            }
+        });
 
         egui::ScrollArea::vertical()
             .max_height(400.0)
