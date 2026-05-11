@@ -548,40 +548,40 @@ impl MapDataNode {
         self.available_children().next().is_some()
     }
 
-    pub fn has_child_of_type(&self, child_type: NodeChildType) -> bool {
-        let list = match child_type {
-            NodeChildType::MapPolySet => &self.children_mappolyset,
-            NodeChildType::MapObjSet => &self.children_mapobjset,
-            NodeChildType::MapItemSet => &self.children_mapitemset,
-            NodeChildType::MapEnemySet => &self.children_mapenemyset,
-            NodeChildType::MapLocator => &self.children_maplocator,
-            NodeChildType::MapPath => &self.children_mappath,
-            NodeChildType::MapRect => &self.children_maprect,
-            NodeChildType::MapCircle => &self.children_mapcircle,
-            NodeChildType::MapTerrain => &self.children_mapterrain,
-        };
+    // pub fn has_child_of_type(&self, child_type: NodeChildType) -> bool {
+    //     let list = match child_type {
+    //         NodeChildType::MapPolySet => &self.children_mappolyset,
+    //         NodeChildType::MapObjSet => &self.children_mapobjset,
+    //         NodeChildType::MapItemSet => &self.children_mapitemset,
+    //         NodeChildType::MapEnemySet => &self.children_mapenemyset,
+    //         NodeChildType::MapLocator => &self.children_maplocator,
+    //         NodeChildType::MapPath => &self.children_mappath,
+    //         NodeChildType::MapRect => &self.children_maprect,
+    //         NodeChildType::MapCircle => &self.children_mapcircle,
+    //         NodeChildType::MapTerrain => &self.children_mapterrain,
+    //     };
 
-        list.as_ref().is_some_and(|children| !children.is_empty())
-    }
+    //     list.as_ref().is_some_and(|children| !children.is_empty())
+    // }
 
-    pub fn children_of_type_mut(
-        &mut self,
-        child_type: NodeChildType,
-    ) -> impl Iterator<Item = &mut MapDataNode> {
-        let list = match child_type {
-            NodeChildType::MapPolySet => &mut self.children_mappolyset,
-            NodeChildType::MapObjSet => &mut self.children_mapobjset,
-            NodeChildType::MapItemSet => &mut self.children_mapitemset,
-            NodeChildType::MapEnemySet => &mut self.children_mapenemyset,
-            NodeChildType::MapLocator => &mut self.children_maplocator,
-            NodeChildType::MapPath => &mut self.children_mappath,
-            NodeChildType::MapRect => &mut self.children_maprect,
-            NodeChildType::MapCircle => &mut self.children_mapcircle,
-            NodeChildType::MapTerrain => &mut self.children_mapterrain,
-        };
+    // pub fn children_of_type_mut(
+    //     &mut self,
+    //     child_type: NodeChildType,
+    // ) -> impl Iterator<Item = &mut MapDataNode> {
+    //     let list = match child_type {
+    //         NodeChildType::MapPolySet => &mut self.children_mappolyset,
+    //         NodeChildType::MapObjSet => &mut self.children_mapobjset,
+    //         NodeChildType::MapItemSet => &mut self.children_mapitemset,
+    //         NodeChildType::MapEnemySet => &mut self.children_mapenemyset,
+    //         NodeChildType::MapLocator => &mut self.children_maplocator,
+    //         NodeChildType::MapPath => &mut self.children_mappath,
+    //         NodeChildType::MapRect => &mut self.children_maprect,
+    //         NodeChildType::MapCircle => &mut self.children_mapcircle,
+    //         NodeChildType::MapTerrain => &mut self.children_mapterrain,
+    //     };
 
-        list.as_mut().into_iter().flatten()
-    }
+    //     list.as_mut().into_iter().flatten()
+    // }
 
     pub fn children_of_type_vec_option_mut(
         &mut self,
