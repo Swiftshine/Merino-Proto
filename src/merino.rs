@@ -55,4 +55,8 @@ impl eframe::App for MerinoApp {
             MerinoView::LevelEditor => self.level_editor.show_ui(ui),
         });
     }
+
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.level_editor.on_exit();
+    }
 }

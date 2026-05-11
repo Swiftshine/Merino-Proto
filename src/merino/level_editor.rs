@@ -1,4 +1,6 @@
-use crate::merino::common::util::get_merino_folder_path;
+use crate::merino::common::util::{
+    get_merino_folder_path, make_merino_folder, merino_folder_exists,
+};
 use crate::merino::game::mapbin::Params;
 use crate::merino::level_editor::le_image::ImageDefinition;
 use crate::merino::{
@@ -6,10 +8,12 @@ use crate::merino::{
 };
 use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Result;
 use enum_map::EnumMap;
+use serde::{Deserialize, Serialize};
 use strum::{Display, EnumIter};
 
 mod le_add_object;
@@ -378,8 +382,7 @@ pub struct ObjectPropertyEditorContext {
 //     }
 // }
 
-// todo! save/load docking settings
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum Tab {
     AddObject,
     Canvas,
@@ -475,16 +478,14 @@ pub struct LevelEditor {
     pub dock_state: egui_dock::DockState<Tab>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct LevelEditorState {
+    pub dock_state: egui_dock::DockState<Tab>,
+}
+
 impl LevelEditor {
     pub fn new() -> Self {
-        let mut dock_state = egui_dock::DockState::new(vec![Tab::Canvas]);
-
-        // split window, properties on the right by default
-        let [_canvas_node, _properties_node] = dock_state.main_surface_mut().split_right(
-            egui_dock::NodeIndex::root(),
-            0.8, // 80% canvas, 20% properties,
-            vec![Tab::ObjectProperties],
-        );
+        let dock_state = Self::load_dock();
 
         Self {
             io_context: Default::default(),
@@ -494,6 +495,50 @@ impl LevelEditor {
             editor_context: Default::default(),
             dock_state,
         }
+    }
+
+    fn default_dock() -> egui_dock::DockState<Tab> {
+        let mut dock_state = egui_dock::DockState::new(vec![Tab::Canvas]);
+
+        let [_canvas_node, _properties_node] = dock_state.main_surface_mut().split_right(
+            egui_dock::NodeIndex::root(),
+            0.8,
+            vec![Tab::ObjectProperties],
+        );
+
+        dock_state
+    }
+
+    fn save_dock(&self) -> Result<()> {
+        if !merino_folder_exists()? {
+            make_merino_folder()?;
+        }
+
+        let state = LevelEditorState {
+            dock_state: self.dock_state.clone(),
+        };
+
+        let json = serde_json::to_string_pretty(&state)?;
+
+        fs::write(get_merino_folder_path()?.join("le_dock_layout.json"), json)?;
+
+        Ok(())
+    }
+
+    fn load_dock() -> egui_dock::DockState<Tab> {
+        let Ok(path) = get_merino_folder_path() else {
+            return Self::default_dock();
+        };
+
+        let Ok(data) = fs::read_to_string(path.join("le_dock_layout.json")) else {
+            return Self::default_dock();
+        };
+
+        let Ok(state) = serde_json::from_str::<LevelEditorState>(&data) else {
+            return Self::default_dock();
+        };
+
+        state.dock_state
     }
 
     pub fn show_ui(&mut self, ui: &mut egui::Ui) {
@@ -726,5 +771,9 @@ impl LevelEditor {
                 .selected_node_paths
                 .retain(|p| p != &path);
         }
+    }
+
+    pub fn on_exit(&mut self) {
+        let _ = self.save_dock();
     }
 }
