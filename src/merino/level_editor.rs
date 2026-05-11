@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumIter};
 
 mod le_add_object;
+mod le_archive;
 mod le_canvas;
 mod le_edit_fields;
 mod le_edit_object;
@@ -328,12 +329,15 @@ impl CanvasContext {
 #[derive(Default)]
 pub struct IOContext {
     pub file_open: bool,
+    pub archive_open: bool,
     pub file_path: Option<PathBuf>,
 }
 
 #[derive(Default)]
 pub struct FileContext {
     pub mapdata: Mapbin,
+    pub archive_contents: Vec<(String, Vec<u8>)>,
+    pub current_archive_file: Option<String>,
 }
 
 impl FileContext {
@@ -384,6 +388,7 @@ pub struct ObjectPropertyEditorContext {
 
 #[derive(PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum Tab {
+    Archive,
     AddObject,
     Canvas,
     CanvasSettings,
@@ -401,6 +406,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
         match tab {
+            Tab::Archive => EmojiMessage::folder_msg("Archive"),
             Tab::AddObject => EmojiMessage::add_msg("Add Object"),
             Tab::Canvas => EmojiMessage::palette_msg("Canvas"),
             Tab::CanvasSettings => EmojiMessage::burger_msg("Canvas Settings"),
@@ -413,6 +419,7 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
 
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
         let file_open = self.editor.io_context.file_open;
+        let archive_open = self.editor.io_context.archive_open;
 
         macro_rules! do_if_file_open {
             ($body:expr) => {
@@ -424,7 +431,23 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
             };
         }
 
+        macro_rules! do_if_archive_open {
+            ($body:expr) => {
+                if archive_open {
+                    $body
+                } else {
+                    ui.centered_and_justified(|ui| ui.label("No archive open."));
+                }
+            };
+        }
+
         match tab {
+            Tab::Archive => {
+                do_if_archive_open!({
+                    self.editor.show_archive(ui);
+                });
+            }
+
             Tab::AddObject => {
                 do_if_file_open!({
                     self.editor.show_add_object(ui);
@@ -555,6 +578,14 @@ impl LevelEditor {
                         self.canvas_context.target = None;
                         self.canvas_context.camera = CanvasCamera::default();
                         self.editor_context.commands.clear();
+                        self.file_context.mapdata = Mapbin::default();
+                    }
+                }
+
+                if ui.button("Open Archive").clicked() {
+                    if let Ok(_) = self.open_archive() {
+                        self.file_context.current_archive_file = None;
+                        self.file_context.mapdata = Mapbin::default();
                     }
                 }
 
@@ -578,6 +609,11 @@ impl LevelEditor {
 
                 ui.menu_button("Open Window", |ui| {
                     let items = [
+                        (
+                            EmojiMessage::folder_msg("Archive"),
+                            Tab::Archive,
+                            "Edit files within the archive.",
+                        ),
                         (
                             EmojiMessage::add_msg("Add Object"),
                             Tab::AddObject,

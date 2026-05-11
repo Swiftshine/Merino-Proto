@@ -6,7 +6,8 @@ use crate::merino::{
     reader::read_level,
     writer::write_level,
 };
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
+use gfarch::gfarch;
 use rfd::FileDialog;
 
 const OBJECTDATA_FILE: &str = "objectdata.json";
@@ -85,6 +86,33 @@ impl LevelEditor {
 
         self.parse_image_data(file)?;
 
+        Ok(())
+    }
+
+    pub fn open_archive(&mut self) -> Result<()> {
+        if let Some(path) = FileDialog::new()
+            .add_filter("Good-Feel Archive", &["gfa"])
+            .pick_file()
+        {
+            self.io_context.file_path = Some(path);
+            let path = self.io_context.file_path.as_ref().unwrap();
+
+            let data = fs::read(path)?;
+
+            self.file_context.archive_contents = gfarch::extract(&data)?;
+
+            if self.file_context.archive_contents.is_empty() {
+                bail!("archive is invalid");
+            }
+
+            // todo! since both BSON and level files are often stored in the same archive,
+            // just have a level editor and a BSON viewer for the same file
+            // that way it can all be done in-editor
+            // there'd be a docked tab for it and clicking on it would open that file's editor
+
+            self.io_context.archive_open = true;
+            // file is not open just yet because we don't know if there even is a level file in here at all
+        }
         Ok(())
     }
 }
