@@ -143,99 +143,101 @@ impl LevelEditor {
         node: &mut MapDataNode,
         node_path: &NodePath,
     ) {
-        ui.label(egui::RichText::new("Children").strong());
-        let mut child_to_select = None;
+        ui.label(egui::RichText::new("Children").strong().underline())
+            .on_hover_text("The parentheses indicate how many children of that type are present.");
 
         for child_type in NodeChildType::iter() {
-            egui::Frame::new()
-                .fill(ui.visuals().faint_bg_color)
-                .corner_radius(4.0)
-                .inner_margin(4.0)
+            let children_opt = node.children_of_type_vec_mut(child_type);
+            let child_count = children_opt.as_ref().map(|v| v.len()).unwrap_or(0);
+
+            let header = format!("({}) {}", child_count, child_type);
+
+            egui::CollapsingHeader::new(header)
+                .default_open(false)
                 .show(ui, |ui| {
-                    ui.label(child_type.to_string());
+                    ui.vertical(|ui| {
+                        match children_opt {
+                            Some(children) if !children.is_empty() => {
+                                ui.indent(ui.id().with(child_type), |ui| {
+                                    for index in 0..children.len() {
+                                        ui.horizontal(|ui| {
+                                            ui.label(format!("Index {}", index));
 
-                    // dont make indentations if no children present
-                    let has_children = node.has_child_of_type(child_type);
-                    if has_children {
-                        ui.indent(ui.id().with(child_type), |ui| {
-                            for (index, _) in node.children_of_type_mut(child_type).enumerate() {
-                                ui.horizontal(|ui| {
-                                    ui.label(format!("Index {}", index));
+                                            ui.with_layout(
+                                                egui::Layout::right_to_left(egui::Align::Center),
+                                                |ui| {
+                                                    if ui
+                                                        .button(EmojiMessage::discard())
+                                                        .on_hover_text("Delete child")
+                                                        .clicked()
+                                                    {
+                                                        let mut del_path = node_path.clone();
+                                                        del_path.push((child_type, index));
+                                                        editor_context.commands.push(
+                                                            EditorCommand::remove_node(del_path),
+                                                        );
+                                                    }
 
-                                    ui.with_layout(
-                                        egui::Layout::right_to_left(egui::Align::Center),
-                                        |ui| {
-                                            if ui
-                                                .button(EmojiMessage::discard())
-                                                .on_hover_text("Delete child")
-                                                .clicked()
-                                            {
-                                                let mut del_path = node_path.clone();
-                                                del_path.push((child_type, index));
-                                                editor_context
-                                                    .commands
-                                                    .push(EditorCommand::remove_node(del_path));
-                                            }
+                                                    if ui
+                                                        .button(EmojiMessage::cross())
+                                                        .on_hover_text("Detach child")
+                                                        .clicked()
+                                                    {
+                                                        let mut child_path = node_path.clone();
+                                                        child_path.push((child_type, index));
 
-                                            if ui
-                                                .button(EmojiMessage::cross())
-                                                .on_hover_text("Detach child")
-                                                .clicked()
-                                            {
-                                                let mut child_path = node_path.clone();
-                                                child_path.push((child_type, index));
+                                                        editor_context.commands.push(
+                                                            EditorCommand::move_node(
+                                                                child_path,
+                                                                Vec::new(),
+                                                            ),
+                                                        );
+                                                    }
 
-                                                // set the parent of the child to root
-                                                editor_context.commands.push(
-                                                    EditorCommand::move_node(
-                                                        child_path,
-                                                        Vec::new(), // root
-                                                    ),
-                                                );
-                                            }
-
-                                            if ui
-                                                .button(EmojiMessage::target())
-                                                .on_hover_text("Go to child")
-                                                .clicked()
-                                            {
-                                                let mut new_path = node_path.clone();
-                                                new_path.push((child_type, index));
-                                                child_to_select = Some(new_path);
-
-                                                // todo! snap camera to that position
-                                            }
-                                        },
-                                    )
+                                                    if ui
+                                                        .button(EmojiMessage::target())
+                                                        .on_hover_text("Go to child")
+                                                        .clicked()
+                                                    {
+                                                        let mut new_path = node_path.clone();
+                                                        new_path.push((child_type, index));
+                                                        editor_context.commands.push(
+                                                            EditorCommand::select_node(new_path),
+                                                        );
+                                                    }
+                                                },
+                                            )
+                                        });
+                                    }
                                 });
                             }
+
+                            _ => {
+                                ui.label("No children");
+                            }
+                        }
+
+                        ui.horizontal(|ui| {
+                            if ui
+                                .button(EmojiMessage::add_msg("New child"))
+                                .on_hover_text("Create a new node of this type.")
+                                .clicked()
+                            {
+                                canvas_context.target =
+                                    Some(CanvasTarget::new_to_node(child_type, node_path.clone()));
+                            }
+
+                            if ui
+                                .button(EmojiMessage::target_msg("Set Child"))
+                                .on_hover_text("Select an existing node of this type.")
+                                .clicked()
+                            {
+                                canvas_context.target =
+                                    Some(CanvasTarget::search(node_path.clone()));
+                            }
                         });
-                    }
-
-                    ui.horizontal(|ui| {
-                        if ui
-                            .button(EmojiMessage::add_msg("New child"))
-                            .on_hover_text("Create a new node of this type.")
-                            .clicked()
-                        {
-                            canvas_context.target =
-                                Some(CanvasTarget::new_to_node(child_type, node_path.clone()));
-                        }
-
-                        if ui
-                            .button(EmojiMessage::target_msg("Set Child"))
-                            .on_hover_text("Select an existing node of this type.")
-                            .clicked()
-                        {
-                            canvas_context.target = Some(CanvasTarget::search(node_path.clone()));
-                        }
                     });
                 });
-        }
-
-        if let Some(path) = child_to_select {
-            canvas_context.selected_node_paths.clear();
-            canvas_context.selected_node_paths.push(path);
         }
     }
 
