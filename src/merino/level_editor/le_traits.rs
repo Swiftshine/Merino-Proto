@@ -1,4 +1,5 @@
 use crate::merino::{
+    common::emoji::EmojiMessage,
     game::mapbin::{LimitedString, MapNodeType, Params, Vec2f, Vec3f},
     level_editor::le_params::{ParameterDataType, ParameterObject},
 };
@@ -82,6 +83,15 @@ macro_rules! impl_editable_vec {
                                     .range(f32::MIN..=f32::MAX));
                             )*
                         });
+                    });
+                } else {
+                    ui.horizontal(|ui|{
+                        $(
+                            ui.label(stringify!($field).to_uppercase());
+                            ui.add(egui::DragValue::new(&mut self.$field)
+                                .speed(0.5)
+                                .range(f32::MIN..=f32::MAX));
+                        )*
                     });
                 }
             }
@@ -237,11 +247,68 @@ where
 impl Editable for Vec<Vec2f> {
     fn edit_properties(&mut self, ui: &mut egui::Ui, info: Option<EditInfo>) {
         let render = |ui: &mut egui::Ui, values: &mut Vec<Vec2f>| {
+            let mut remove_index = None;
+            let mut insert_index = None;
+
+            let can_remove = values.len() > 2;
+
             for (index, value) in values.iter_mut().enumerate() {
                 ui.horizontal(|ui| {
                     ui.label(format!("[{}]", index));
+
                     value.edit_properties(ui, None);
+
+                    if ui
+                        .small_button(EmojiMessage::add())
+                        .on_hover_text("Insert after")
+                        .clicked()
+                    {
+                        insert_index = Some(index + 1);
+                    }
+
+                    if ui
+                        .add_enabled(can_remove, egui::Button::new(EmojiMessage::cross()))
+                        .on_disabled_hover_text("Remove")
+                        .on_hover_text("Remove")
+                        .clicked()
+                    {
+                        remove_index = Some(index);
+                    }
                 });
+            }
+
+            // apply removal after iteration
+            if let Some(index) = remove_index {
+                values.remove(index);
+            }
+
+            // apply insertion after iteration
+            if let Some(index) = insert_index {
+                let new_point = values
+                    .get(index.saturating_sub(1))
+                    .or_else(|| values.last())
+                    .map(|prev| Vec2f {
+                        x: prev.x + 4.0,
+                        y: prev.y,
+                    })
+                    .unwrap_or(Vec2f { x: 0.0, y: 0.0 });
+
+                values.insert(index, new_point);
+            }
+
+            ui.separator();
+
+            // append at end
+            if ui.button(EmojiMessage::add_msg("Add Point")).clicked() {
+                let new_point = values
+                    .last()
+                    .map(|last| Vec2f {
+                        x: last.x + 4.0,
+                        y: last.y,
+                    })
+                    .unwrap_or(Vec2f { x: 0.0, y: 0.0 });
+
+                values.push(new_point);
             }
         };
 

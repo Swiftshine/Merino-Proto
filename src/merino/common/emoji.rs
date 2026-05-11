@@ -25,7 +25,7 @@ macro_rules! emoji_msg {
 }
 
 impl EmojiMessage {
-    emoji_msg!(add, "➕", message);
+    emoji_msg!(add, "➕", both);
     emoji_msg!(check, "✔", message);
     emoji_msg!(cross, "❌", both);
     emoji_msg!(discard, "🗑", icon);
