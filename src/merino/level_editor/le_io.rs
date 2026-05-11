@@ -101,10 +101,6 @@ impl LevelEditor {
 
             self.file_context.archive_contents = gfarch::extract(&data)?;
 
-            if self.file_context.archive_contents.is_empty() {
-                bail!("archive is invalid");
-            }
-
             // todo! since both BSON and level files are often stored in the same archive,
             // just have a level editor and a BSON viewer for the same file
             // that way it can all be done in-editor
