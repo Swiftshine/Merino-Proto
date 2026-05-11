@@ -6,7 +6,7 @@ use crate::merino::{
     reader::read_level,
     writer::write_level,
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use gfarch::gfarch;
 use rfd::FileDialog;
 
