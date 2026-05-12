@@ -50,6 +50,7 @@
     - [x] save as archive
     - [ ] import files into archive
     - [ ] export files out of archive
+    - [ ] extract archive as folder
 - [x] docking
 - [ ] node tree
 - [ ] download objectdata
