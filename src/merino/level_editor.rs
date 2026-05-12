@@ -7,7 +7,7 @@ use crate::merino::{
     common::camera::CanvasCamera, game::mapbin::Mapbin, level_editor::le_params::ParameterObject,
 };
 use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::PathBuf;
 
@@ -336,7 +336,7 @@ pub struct IOContext {
 #[derive(Default)]
 pub struct FileContext {
     pub mapdata: Mapbin,
-    pub archive_contents: Vec<(String, Vec<u8>)>,
+    pub archive_contents: BTreeMap<String, Vec<u8>>, // to preserve alphabetical order
     pub current_archive_file: Option<String>,
 }
 

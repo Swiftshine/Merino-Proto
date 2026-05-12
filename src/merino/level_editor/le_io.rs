@@ -100,7 +100,7 @@ impl LevelEditor {
 
             let data = fs::read(path)?;
 
-            self.file_context.archive_contents = gfarch::extract(&data)?;
+            self.file_context.archive_contents = gfarch::extract(&data)?.into_iter().collect();
 
             // todo! since both BSON and level files are often stored in the same archive,
             // just have a level editor and a BSON viewer for the same file
@@ -114,51 +114,42 @@ impl LevelEditor {
     }
 
     pub fn save_archive(&mut self) -> Result<()> {
-        if let Some(path) = FileDialog::new()
+        let Some(path) = FileDialog::new()
             .add_filter("Good-Feel Archive", &["gfa"])
             .save_file()
-        {
-            // temporary borrow
-            {
-                // save current file
-                let data = write_level(&self.file_context.mapdata)?;
+        else {
+            return Ok(());
+        };
 
-                println!(
-                    "saving {} bytes to {}",
-                    data.len(),
-                    self.file_context.current_archive_file.as_ref().unwrap()
-                );
+        let Some(name) = self.file_context.current_archive_file.as_ref() else {
+            anyhow::bail!("No current archive file selected");
+        };
 
-                // todo! maybe replace this with a HashMap
-                let file = self
-                    .file_context
-                    .archive_contents
-                    .iter_mut()
-                    .find(|(name, _)| {
-                        name == self.file_context.current_archive_file.as_ref().unwrap()
-                    })
-                    .unwrap();
+        let level_data = write_level(&self.file_context.mapdata)?;
 
-                file.1 = data;
-            }
+        let file = self
+            .file_context
+            .archive_contents
+            .get_mut(name)
+            .ok_or_else(|| anyhow::anyhow!("Archive entry not found: {name}"))?;
 
-            let data = gfarch::pack_from_files(
-                &self.file_context.archive_contents,
-                Version::V3_1,
-                CompressionType::BPE,
-                GFCPOffset::Default,
-            );
+        *file = level_data;
 
-            let verify = gfarch::extract(&data)?;
-            let saved = verify
-                .iter()
-                .find(|(n, _)| n == self.file_context.current_archive_file.as_ref().unwrap())
-                .unwrap();
+        let files: Vec<(String, Vec<u8>)> = self
+            .file_context
+            .archive_contents
+            .iter()
+            .map(|(name, data)| (name.clone(), data.clone()))
+            .collect();
 
-            println!("packed file size: {}", saved.1.len());
+        let data = gfarch::pack_from_files(
+            &files,
+            Version::V3_1,
+            CompressionType::BPE,
+            GFCPOffset::Default,
+        );
 
-            fs::write(path, data)?;
-        }
+        fs::write(path, data)?;
 
         Ok(())
     }
