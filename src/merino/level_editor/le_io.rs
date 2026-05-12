@@ -1,8 +1,8 @@
-use std::fs;
+use std::{fs, io::Cursor, path::Path};
 
 use crate::merino::{
     common::util::{get_merino_folder_path, make_merino_folder, merino_folder_exists},
-    level_editor::LevelEditor,
+    level_editor::{DownloadContext, DownloadMessage, LevelEditor},
     reader::read_level,
     writer::write_level,
 };
@@ -10,9 +10,12 @@ use ::gfarch::gfarch::{CompressionType, GFCPOffset, Version};
 use anyhow::{Context, Result};
 use gfarch::gfarch;
 use rfd::FileDialog;
+use zip::ZipArchive;
 
 const OBJECTDATA_FILE: &str = "objectdata.json";
 const IMAGEDATA_FILE: &str = "imagedata.json";
+const IMAGE_REPO_URL: &str =
+    "https://github.com/Swiftshine/yww-merino-image/archive/refs/heads/main.zip";
 
 impl LevelEditor {
     // returns if the file was actually opened
@@ -151,6 +154,95 @@ impl LevelEditor {
 
         fs::write(path, data)?;
 
+        Ok(())
+    }
+
+    pub fn start_download(&mut self) -> Result<()> {
+        // prevent multiple downloads
+        if self.download_context.is_some() {
+            return Ok(());
+        }
+
+        // create communication channel
+        let (tx, rx) = std::sync::mpsc::channel();
+
+        // create context
+        self.download_context = Some(DownloadContext::new(rx));
+
+        let url = IMAGE_REPO_URL.to_string();
+
+        if !merino_folder_exists()? {
+            make_merino_folder()?;
+        }
+
+        let extract_path = get_merino_folder_path()?;
+
+        // spawn background task
+        self.runtime.spawn(async move {
+            // helper
+            let send_progress = |value: f32| {
+                let _ = tx.send(DownloadMessage::Progress(value));
+            };
+
+            fn strip_first_component(path: &str) -> Option<&str> {
+                let mut parts = path.splitn(2, '/');
+                parts.next()?; // drop repo root folder
+                parts.next()
+            }
+
+            // download
+            send_progress(10.0);
+            let response = reqwest::get(&url).await.unwrap();
+
+            send_progress(30.0);
+            let bytes = response.bytes().await.unwrap();
+
+            // extract
+            send_progress(50.0);
+
+            let result = tokio::task::spawn_blocking(move || {
+                let reader = Cursor::new(bytes);
+                let mut archive = ZipArchive::new(reader).unwrap();
+
+                for i in 0..archive.len() {
+                    let mut file = archive.by_index(i).unwrap();
+
+                    let original_path = file.name();
+
+                    // skip root
+                    let Some(stripped) = strip_first_component(original_path) else {
+                        continue;
+                    };
+
+                    let outpath = Path::new(&extract_path).join(stripped);
+
+                    if file.name().ends_with('/') {
+                        fs::create_dir_all(&outpath).unwrap();
+                    } else {
+                        if let Some(parent) = outpath.parent() {
+                            fs::create_dir_all(parent).unwrap();
+                        }
+
+                        let mut outfile = std::fs::File::create(&outpath).unwrap();
+                        std::io::copy(&mut file, &mut outfile).unwrap();
+                    }
+                }
+            })
+            .await;
+
+            // done
+
+            match result {
+                Ok(_) => {
+                    send_progress(100.0);
+                    let _ = tx.send(DownloadMessage::Finished);
+                }
+
+                Err(e) => {
+                    let _ = tx.send(DownloadMessage::Error(e.to_string()));
+                }
+            }
+        });
         Ok(())
     }
 }

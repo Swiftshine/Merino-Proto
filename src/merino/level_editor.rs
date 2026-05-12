@@ -10,11 +10,13 @@ use crate::merino::{common::emoji::*, game::mapbin::MapNodeType};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::PathBuf;
+use std::sync::mpsc::Receiver;
 
 use anyhow::Result;
 use enum_map::EnumMap;
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumIter};
+use tokio::runtime::Runtime;
 
 mod le_add_object;
 mod le_archive;
@@ -490,6 +492,22 @@ impl<'a> egui_dock::TabViewer for TabViewer<'a> {
     }
 }
 
+pub enum DownloadMessage {
+    Progress(f32),
+    Finished,
+    Error(String),
+}
+
+pub struct DownloadContext {
+    pub receiver: Receiver<DownloadMessage>,
+}
+
+impl DownloadContext {
+    pub fn new(receiver: Receiver<DownloadMessage>) -> Self {
+        Self { receiver }
+    }
+}
+
 pub struct LevelEditor {
     // contexts
     pub io_context: IOContext,
@@ -497,7 +515,9 @@ pub struct LevelEditor {
     pub canvas_context: CanvasContext,
     pub object_property_editor_context: ObjectPropertyEditorContext,
     pub editor_context: EditorContext,
+    pub download_context: Option<DownloadContext>,
 
+    pub runtime: tokio::runtime::Runtime,
     pub dock_state: egui_dock::DockState<Tab>,
 }
 
@@ -516,6 +536,8 @@ impl LevelEditor {
             canvas_context: Default::default(),
             object_property_editor_context: Default::default(),
             editor_context: Default::default(),
+            download_context: None,
+            runtime: Runtime::new().unwrap(),
             dock_state,
         }
     }
@@ -562,6 +584,33 @@ impl LevelEditor {
         };
 
         state.dock_state
+    }
+
+    pub fn handle_download_messages(&mut self) {
+        let mut should_clear = false;
+        if let Some(context) = &mut self.download_context {
+            while let Ok(msg) = context.receiver.try_recv() {
+                match msg {
+                    DownloadMessage::Progress(value) => {
+                        println!("Download: {value}%");
+                    }
+
+                    DownloadMessage::Finished => {
+                        println!("Download complete.");
+                        should_clear = true;
+                    }
+
+                    DownloadMessage::Error(e) => {
+                        eprintln!("Download failed: {e}");
+                        should_clear = true;
+                    }
+                }
+            }
+        }
+
+        if should_clear {
+            self.download_context = None;
+        }
     }
 
     pub fn show_ui(&mut self, ui: &mut egui::Ui) {
@@ -622,6 +671,11 @@ impl LevelEditor {
                     let _ = self.load_image_data();
                 }
 
+                if ui.button("Download Image Data").clicked() {
+                    // start download
+                    let _ = self.start_download();
+                }
+
                 ui.menu_button("Open Window", |ui| {
                     let items = [
                         (
@@ -666,6 +720,7 @@ impl LevelEditor {
             });
         });
 
+        self.handle_download_messages();
         self.process_commands();
 
         self.show_delete_confirmation(ui.ctx());
@@ -712,7 +767,6 @@ impl LevelEditor {
         if !self.editor_context.commands.is_empty() {
             // take all commands, leaving empty vec
             let commands = std::mem::take(&mut self.editor_context.commands);
-
             // process these next frame
             let mut additional_commands = Vec::new();
 
