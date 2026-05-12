@@ -599,6 +599,21 @@ impl LevelEditor {
                     let _ = self.save_file();
                 }
 
+                if ui
+                    .add_enabled(
+                        self.io_context.archive_open && self.io_context.file_path.is_some(),
+                        egui::Button::new("Save Archive As"),
+                    )
+                    .clicked()
+                {
+                    match self.save_archive() {
+                        Ok(_) => {}
+                        Err(e) => {
+                            dbg!(e);
+                        }
+                    }
+                }
+
                 if ui.button("Load Parameter Data").clicked() {
                     let _ = self.load_param_data();
                 }

@@ -56,7 +56,7 @@ impl LevelEditor {
         });
 
         egui::ScrollArea::vertical()
-            .max_height(400.0)
+            .max_height(500.0)
             .show(ui, |ui| match node.node_type {
                 MapNodeType::MapSet => {
                     Self::edit_mapset_properties(ui, &mut node.node_data);
@@ -133,6 +133,7 @@ impl LevelEditor {
 
         // view children
 
+        ui.add_space(4.0);
         Self::edit_child_ui(ui, canvas_context, editor_context, node, &node_path);
     }
 

@@ -6,6 +6,7 @@ use crate::merino::{
     reader::read_level,
     writer::write_level,
 };
+use ::gfarch::gfarch::{CompressionType, GFCPOffset, Version};
 use anyhow::{Context, Result};
 use gfarch::gfarch;
 use rfd::FileDialog;
@@ -109,6 +110,56 @@ impl LevelEditor {
             self.io_context.archive_open = true;
             // file is not open just yet because we don't know if there even is a level file in here at all
         }
+        Ok(())
+    }
+
+    pub fn save_archive(&mut self) -> Result<()> {
+        if let Some(path) = FileDialog::new()
+            .add_filter("Good-Feel Archive", &["gfa"])
+            .save_file()
+        {
+            // temporary borrow
+            {
+                // save current file
+                let data = write_level(&self.file_context.mapdata)?;
+
+                println!(
+                    "saving {} bytes to {}",
+                    data.len(),
+                    self.file_context.current_archive_file.as_ref().unwrap()
+                );
+
+                // todo! maybe replace this with a HashMap
+                let file = self
+                    .file_context
+                    .archive_contents
+                    .iter_mut()
+                    .find(|(name, _)| {
+                        name == self.file_context.current_archive_file.as_ref().unwrap()
+                    })
+                    .unwrap();
+
+                file.1 = data;
+            }
+
+            let data = gfarch::pack_from_files(
+                &self.file_context.archive_contents,
+                Version::V3_1,
+                CompressionType::BPE,
+                GFCPOffset::Default,
+            );
+
+            let verify = gfarch::extract(&data)?;
+            let saved = verify
+                .iter()
+                .find(|(n, _)| n == self.file_context.current_archive_file.as_ref().unwrap())
+                .unwrap();
+
+            println!("packed file size: {}", saved.1.len());
+
+            fs::write(path, data)?;
+        }
+
         Ok(())
     }
 }

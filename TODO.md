@@ -47,7 +47,9 @@
     - [x] open archive
     - [ ] add to archive
     - [ ] remove from archive
-    - [ ] save as archive
+    - [x] save as archive
+    - [ ] import files into archive
+    - [ ] export files out of archive
 - [x] docking
 - [ ] node tree
 - [ ] download objectdata
