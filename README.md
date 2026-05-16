@@ -11,3 +11,4 @@ A **prototype** Yoshi's Woolly World editor.
 ## Controls (tentative)
 
 Right-click to drag
+Ctrl + scroll wheel to zoom
